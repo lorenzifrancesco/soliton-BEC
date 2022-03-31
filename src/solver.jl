@@ -25,7 +25,7 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     ψ_spect = zeros(ComplexF64, space_steps, time_steps)
     
     #Implement external initial state 
-    waveform = exp.(-(space).^2 ./ 1e6)
+    waveform = exp.(-(space).^2 / 1e-10)
     ## [SPACE INDEX, TIME INDEX]
     ψ[:, 1] = waveform
     # fig = Plots.plot(space, abs.(ψ[:, 1]), show=true)

@@ -2,10 +2,10 @@ using SolitonBEC
 using Printf
 
 ## Simulation
-std_sim = Simulation(20e-10,
-  1e-10,
-  50000,
-  100)
+std_sim = Simulation(1e-3,
+  1e-5,
+  100e-6,
+  5e-7)
 
 ## Apparata
 std_apparatus = Apparatus(1e-26,
