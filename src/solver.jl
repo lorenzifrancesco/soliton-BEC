@@ -31,14 +31,14 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     # fig = Plots.plot(space, abs.(ψ[:, 1]), show=true)
     # ψ_spect[:, 1] = fft(ψ[:, 1])
   
-    fwd_disp = exp.(sim.ds * coeffs.α * k.^2)
+    fwd_disp = exp.(sim.dt * coeffs.α * k.^2)
     curvature = 0* coeffs.β.(space)
 
     @showprogress "Propagating the field... " for n = 1:time_steps-1
       ψ_spect[:, n] = fft(ψ[:, n])
-      ψ_spect[:, n+1] = ψ_spect[:, n] .* fwd_disp .* exp.(sim.ds .* curvature)
+      ψ_spect[:, n+1] = ψ_spect[:, n] .* fwd_disp .* exp.(sim.dt .* curvature)
       ψ[:, n+1] = ifft(ψ_spect[:, n+1])
-      ψ[:, n+1] = ψ[:, n+1] .* exp.(0*sim.ds * coeffs.γ.(ψ[:, n+1]))  ## this is an Euler step
+      ψ[:, n+1] = ψ[:, n+1] .* exp.(0*sim.dt * coeffs.γ.(ψ[:, n+1]))  ## this is an Euler step
     end
     ψ_spect[:, time_steps] = fft(ψ[:, time_steps])
     

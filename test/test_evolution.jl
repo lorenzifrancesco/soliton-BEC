@@ -2,8 +2,8 @@ using SolitonBEC
 using Printf
 
 ## Simulation
-std_sim = Simulation(1e-6,
-  1e-7,
+std_sim = Simulation(1e-5,
+  1e-6,
   100e-6,
   1e-7)
 
