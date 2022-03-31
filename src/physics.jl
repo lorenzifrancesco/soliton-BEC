@@ -44,5 +44,5 @@ end
 
 function run_simulation(sim::Simulation, app::Apparatus, state::InitialState)
     coeffs = get_coefficients(app, state)
-    solve(sim, coeffs, state)
+    ssfm_solve(sim, coeffs, state)
 end
