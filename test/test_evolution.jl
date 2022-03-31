@@ -23,7 +23,7 @@ for (sim, app, state) in configs
   estimate = mem_estimate(sim)
   if estimate < mem_limit
     @printf("Estimated memory consumption: %4.1f MiB\n", estimate/(1024^2))
-    @time run(sim, app, state)
+    @time run_simulation(sim, app, state)
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate/(1024^2))
   end

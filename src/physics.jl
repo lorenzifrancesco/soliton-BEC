@@ -30,18 +30,20 @@ struct Apparatus
 
 
 function get_coefficients(app::Apparatus, state::InitialState)
-    hbar = PhysicalConstants.CODATA2018.h / (2 * pi) 
+    # implement with PhysicalConstants.CODATA2018.h
+    hbar = 6.62607015e-34 / (2 * pi) 
     α = im * hbar/(2*app.m)
     
     # modify for GPE, NPSE...
     β(s) = im * hbar / (8*app.m)
-    σ(ψ) = app.l_perp^2 * sqrt(1+2*app.as(app.N - 1) * abs(ψ)^2)
-    γ(ψ) = - im * hbar/ (2*app.m * σ(ψ)^2) - im * app.m * app.omega_perp^2 / (2*hbar) * σ(ψ)^2 - im * 2 * app.as * (app.N - 1)/(app.m * σ(ψ)^2) * abs(ψ)^2 
+    σ(ψ::ComplexF64) = app.l_perp^2 * sqrt(1+2*app.as*(app.N - 1) * abs(ψ)^2)
+    γ(ψ::ComplexF64) = - im * hbar/ (2*app.m * σ(ψ)^2) - im * app.m * app.omega_perp^2 / (2*hbar) * σ(ψ)^2 - im * 2 * app.as * (app.N - 1)/(app.m * σ(ψ)^2) * abs(ψ)^2 
+    print(typeof(γ))
     return Coefficients(α, β, γ)
 end
 
 
-function run(sim::Simulation, app::Apparatus, state::InitialState)
-    coeffs = get_coefficients(sim, app, state)
+function run_simulation(sim::Simulation, app::Apparatus, state::InitialState)
+    coeffs = get_coefficients(app, state)
     solve(sim, coeffs)
 end
