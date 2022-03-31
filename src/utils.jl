@@ -1,4 +1,4 @@
-function config()
+function graphics_config()
     Plots.plotly()
     Plots.default(size=(1300, 800),
                   guidefont=("times", 10), 

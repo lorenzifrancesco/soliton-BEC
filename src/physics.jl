@@ -38,12 +38,11 @@ function get_coefficients(app::Apparatus, state::InitialState)
     β(s) = im * hbar / (8*app.m)
     σ(ψ::ComplexF64) = app.l_perp^2 * sqrt(1+2*app.as*(app.N - 1) * abs(ψ)^2)
     γ(ψ::ComplexF64) = - im * hbar/ (2*app.m * σ(ψ)^2) - im * app.m * app.omega_perp^2 / (2*hbar) * σ(ψ)^2 - im * 2 * app.as * (app.N - 1)/(app.m * σ(ψ)^2) * abs(ψ)^2 
-    print(typeof(γ))
     return Coefficients(α, β, γ)
 end
 
 
 function run_simulation(sim::Simulation, app::Apparatus, state::InitialState)
     coeffs = get_coefficients(app, state)
-    solve(sim, coeffs)
+    solve(sim, coeffs, state)
 end
