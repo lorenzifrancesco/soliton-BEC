@@ -32,12 +32,19 @@ struct Apparatus
 function get_coefficients(app::Apparatus, state::InitialState)
     # implement with PhysicalConstants.CODATA2018.h
     hbar = 6.62607015e-34 / (2 * pi) 
-    α = im * hbar/(2*app.m)
+       
+
+    ## NPSE
+    # α = im * hbar/(2*app.m)
+    # β(s) = im * hbar / (8*app.m)
+    # σ(ψ::ComplexF64) = app.l_perp * sqrt(1+2*app.as*(app.N - 1) * abs(ψ)^2) NPSE
+    # γ(ψ::ComplexF64) = - im * hbar/ (2*app.m * σ(ψ)^2) - im * app.m * app.omega_perp^2 / (2*hbar) * σ(ψ)^2 - im * 2 * app.as * (app.N - 1)/(app.m * σ(ψ)^2) * abs(ψ)^2 NPSE
     
-    # modify for GPE, NPSE...
-    β(s) = im * hbar / (8*app.m)
-    σ(ψ::ComplexF64) = app.l_perp^2 * sqrt(1+2*app.as*(app.N - 1) * abs(ψ)^2)
-    γ(ψ::ComplexF64) = - im * hbar/ (2*app.m * σ(ψ)^2) - im * app.m * app.omega_perp^2 / (2*hbar) * σ(ψ)^2 - im * 2 * app.as * (app.N - 1)/(app.m * σ(ψ)^2) * abs(ψ)^2 
+    ## GPE
+    α = im * hbar/(2*app.m) - im * app.omega_perp
+    # β(s) = im * hbar / (8*app.m)
+    β(s) = 0
+    γ(ψ::ComplexF64) = - im * hbar * app.as * (app.N - 1) / (app.m * app.l_perp) * abs.(ψ)^2
     return Coefficients(α, β, γ)
 end
 
