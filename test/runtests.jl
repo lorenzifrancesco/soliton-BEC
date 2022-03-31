@@ -1,5 +1,8 @@
+using SolitonBEC
+using Test
+
 names = [
-    "test_evolution.jl",
+    "./test_evolution.jl",
 ]
 
 detected_tests = filter(

@@ -6,3 +6,7 @@ function config()
                   tickfont=("times", 10)
                   )
   end
+
+function mem_estimate(sim::Simulation)
+    return 2* sim.T/sim.dt * sim.S/sim.ds * 128
+  end
