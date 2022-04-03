@@ -2,16 +2,23 @@ using SolitonBEC
 using Printf
 
 ## Simulation
-std_sim = Simulation(1e-5,
-  1e-6,
-  100e-6,
-  1e-7)
+std_sim = Simulation(300e-3, #T
+  5e-4, #dt
+  100e-6, #S
+  1e-8,
+  "GPE") #ds
 
+npse_sim = Simulation(300e-3, #T
+  5e-4, #dt
+  100e-6, #S
+  1e-8,
+  "NPSE") #ds
+  
 ## Apparata
 std_apparatus = Apparatus(1e-26,
-               0,
+               1.4e-9,
                4e14, 
-               1000, 
+               4e8, 
                5e-6)
 
 ## InitialStates      
@@ -20,7 +27,8 @@ InitialState1 =  InitialState(1,
                 0)    
 
 ## Configuration
-configs = [(std_sim, std_apparatus, InitialState1),]
+configs = [(std_sim, std_apparatus, InitialState1), 
+(npse_sim, std_apparatus, InitialState1)]
 mem_limit = 15000000000 #byte
 
 for (sim, app, state) in configs

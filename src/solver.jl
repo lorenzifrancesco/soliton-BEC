@@ -21,6 +21,7 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     # Spatial frequency range computation
     k = 2*pi* LinRange(-1/(2*sim.ds), 1/(2*sim.ds), space_steps)
     k = fftshift(k)
+    #fig = Plots.plot(k, show=true)
     ψ = zeros(ComplexF64, space_steps, time_steps)
     ψ_spect = zeros(ComplexF64, space_steps, time_steps)
     
@@ -31,24 +32,29 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     # fig = Plots.plot(space, abs.(ψ[:, 1]), show=true)
     # ψ_spect[:, 1] = fft(ψ[:, 1])
   
-    fwd_disp = exp.(sim.dt * coeffs.α * k.^2)
+    fwd_disp = exp.(1e-24*sim.dt * coeffs.α * k.^2)
+    display(string("maximum wavevector +-", (1/(2*sim.ds))))
+    display(string("maximum forward dispersion argument:", (coeffs.α)))
     curvature = 0* coeffs.β.(space)
 
     @showprogress "Propagating the field... " for n = 1:time_steps-1
       ψ_spect[:, n] = fft(ψ[:, n])
-      ψ_spect[:, n+1] = ψ_spect[:, n] .* fwd_disp .* exp.(sim.dt .* curvature)
-      ψ[:, n+1] = ifft(ψ_spect[:, n+1])
-      ψ[:, n+1] = ψ[:, n+1] .* exp.(0*sim.dt * coeffs.γ.(ψ[:, n+1]))  ## this is an Euler step
+      ψ_spect[:, n] = ψ_spect[:, n] .* fwd_disp .* exp.(sim.dt/2 .* curvature)
+      ψ[:, n] = ifft(ψ_spect[:, n])
+      ψ[:, n+1] = ψ[:, n] .* exp.(sim.dt/2 * coeffs.γ.(ψ[:, n]))  ## this is an Euler step
     end
     ψ_spect[:, time_steps] = fft(ψ[:, time_steps])
-    
+    #fig = Plots.plot(space, abs.(fwd_disp), show=true)
+
     tmargin_l = Int(floor(time_steps/2))
     tmargin_r = Int(ceil(time_steps/2))
     t_points = 10000
     z_points = 1000
     t_skip = Int(ceil(20 * state.S0/sim.dt /t_points))
     z_skip = Int(ceil(space_steps/z_points))
-    #print(abs.(ψ_spect[:, 1:10]))
-    fig2 = Plots.heatmap(abs.(ψ[:, :]), show=true)
+    #print(abs.(ifft(ψ_spect[:, 1:10])))
+    
+    
+     fig2 = Plots.heatmap(abs.(ψ[:, :]), show=true)
     # fig3 = Plots.surface(abs.(ψ[1:z_skip:space_steps, tmargin_l:t_skip:tmargin_r]), show=true)
   end
