@@ -6,18 +6,15 @@ using ProgressMeter
 function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     time_steps = Int(floor(sim.T/sim.dt))
     space_steps = Int(floor(sim.S/sim.ds))
-    # disp_ratio = sim.S / LD
-    # nonl_ratio = sim.S / LNL
-    print("Simulation diagnostics:\n")
-    # @printf("\tT/T0  = %6.4f  window form factor\n", sim.T/state.S0)
-    # @printf("\tL/LD  = %6.4f\n", disp_ratio)
-    # @printf("\tL/LNL = %6.4f\n", nonl_ratio)
-    # @printf("\tN     = %6.4f \n", sqrt(LD / LNL))
-    @printf("time steps : %6d \n", time_steps)
-    @printf("space steps: %6d \n", space_steps)
-  
     time = LinRange(0, sim.T, time_steps)
     space = LinRange(-sim.S/2, sim.S/2, space_steps)
+
+    print("Simulation diagnostics:\n")
+
+    @printf("Time  : from %6.3i ms, to  %6.3i ms; %6d steps \n", time[1]*1e3, time[time_steps]*1e3, time_steps)
+    @printf("Space : from %6.3f mm, to  %6.3f mm; %6d steps \n", space[1]*1e3, space[space_steps]*1e3, space_steps)
+  
+
     # Spatial frequency range computation
     k = 2*pi* LinRange(-1/(2*sim.ds), 1/(2*sim.ds), space_steps)
     k = fftshift(k)
@@ -53,6 +50,6 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     #print(abs.(ifft(ψ_spect[:, 1:10])))
 
     # Natural orientation choice for plot 
-    fig2 = Plots.heatmap(time*1e3, space*1e6, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
+    fig2 = Plots.heatmap(time*1e3, space*1e3, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
     # fig3 = Plots.surface(abs.(ψ[1:z_skip:space_steps, tmargin_l:t_skip:tmargin_r]), show=true)
   end
