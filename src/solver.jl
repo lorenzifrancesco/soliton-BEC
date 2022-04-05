@@ -26,15 +26,13 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     ψ_spect = zeros(ComplexF64, space_steps, time_steps)
     
     #Implement external initial state 
-    waveform = exp.(-(space).^2 / 1e-10) # typical extension 10μm
+    waveform = exp.(-(space).^2 / (2*state.width^2)) # typical extension 10μm
     ## [SPACE INDEX, TIME INDEX]
     ψ[:, 1] = waveform
     # fig = Plots.plot(space, abs.(ψ[:, 1]), show=true)
     # ψ_spect[:, 1] = fft(ψ[:, 1])
   
     fwd_disp = exp.(sim.dt * coeffs.α * k.^2)
-    display(string("maximum wavevector +-", (1/(2*sim.ds))))
-    display(string("maximum forward dispersion argument:", (coeffs.α)))
     curvature = 0* coeffs.β.(space)
 
     @showprogress "Propagating the field... " for n = 1:time_steps-1
@@ -50,11 +48,11 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     tmargin_r = Int(ceil(time_steps/2))
     t_points = 10000
     z_points = 1000
-    t_skip = Int(ceil(20 * state.S0/sim.dt /t_points))
+    t_skip = Int(ceil(20 * state.width/sim.dt /t_points))
     z_skip = Int(ceil(space_steps/z_points))
     #print(abs.(ifft(ψ_spect[:, 1:10])))
-    
-    
-     fig2 = Plots.heatmap(abs.(ψ[:, :]), show=true)
+
+    # Natural orientation choice for plot 
+    fig2 = Plots.heatmap(time*1e3, space*1e6, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
     # fig3 = Plots.surface(abs.(ψ[1:z_skip:space_steps, tmargin_l:t_skip:tmargin_r]), show=true)
   end
