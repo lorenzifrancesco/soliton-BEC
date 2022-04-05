@@ -48,6 +48,6 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     z_skip = Int(ceil(space_steps/z_points))
 
     # Natural orientation choice for plot 
-    fig2 = Plots.heatmap(time*1e3, space*1e3, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
+    fig2 = Plots.heatmap(time[1:t_skip:time_steps]*1e3, space[1:z_skip:space_steps]*1e3, abs.(ψ[1:z_skip:space_steps, 1:t_skip:time_steps]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
     #fig3 = Plots.surface(time*1e3, space*1e3, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
   end
