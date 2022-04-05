@@ -12,7 +12,6 @@ struct Apparatus
     as::Float64 # m
     omega_perp::Float64 # rad/s
     N::Int64
-    l_perp::Float64 # m
   end
   
 
@@ -33,7 +32,7 @@ struct Apparatus
 function get_coefficients(sim::Simulation, app::Apparatus, state::InitialState)
     # implement with PhysicalConstants.CODATA2018.h
     hbar = 6.62607015e-34 / (2 * pi) 
-       
+    l_perp = sqrt(hbar / (app.m * app.omega_perp))
     @assert(sim.equation in ["NPSE", "GPE"])
     if (sim.equation == "NPSE")
         α = im * hbar/(2*app.m)

@@ -20,8 +20,7 @@ npse_sim = Simulation(300e-3, #T
 std_apparatus = Apparatus(1e-26, #m
                1.4e-9, #as
                400, # omega_perp
-               4e8, # N
-               5e-6) # l_perp
+               4e8) # N
 
 ## InitialStates      
 InitialState1 =  InitialState(1,
