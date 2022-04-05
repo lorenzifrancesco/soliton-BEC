@@ -26,13 +26,13 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     ψ_spect = zeros(ComplexF64, space_steps, time_steps)
     
     #Implement external initial state 
-    waveform = exp.(-(space).^2 / 1e-10)
+    waveform = exp.(-(space).^2 / 1e-10) # typical extension 10μm
     ## [SPACE INDEX, TIME INDEX]
     ψ[:, 1] = waveform
     # fig = Plots.plot(space, abs.(ψ[:, 1]), show=true)
     # ψ_spect[:, 1] = fft(ψ[:, 1])
   
-    fwd_disp = exp.(1e-24*sim.dt * coeffs.α * k.^2)
+    fwd_disp = exp.(sim.dt * coeffs.α * k.^2)
     display(string("maximum wavevector +-", (1/(2*sim.ds))))
     display(string("maximum forward dispersion argument:", (coeffs.α)))
     curvature = 0* coeffs.β.(space)
