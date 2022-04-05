@@ -23,14 +23,14 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     ψ_spect = zeros(ComplexF64, space_steps, time_steps)
     
     #Implement external initial state 
-    waveform = exp.(-(space).^2 / (2*state.width^2)) # typical extension 10μm
+    waveform = 1/ (sqrt(2*pi)* state.width) * exp.(-(space).^2 / (2*state.width^2))
+    #fig = Plots.plot(space, waveform, show=true)
+
     ## [SPACE INDEX, TIME INDEX]
     ψ[:, 1] = waveform
-    # fig = Plots.plot(space, abs.(ψ[:, 1]), show=true)
-    # ψ_spect[:, 1] = fft(ψ[:, 1])
-  
+
     fwd_disp = exp.(sim.dt * coeffs.α * k.^2)
-    curvature = 0* coeffs.β.(space)
+    curvature = coeffs.β.(space)
 
     @showprogress "Propagating the field... " for n = 1:time_steps-1
       ψ_spect[:, n] = fft(ψ[:, n])
@@ -39,7 +39,6 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
       ψ[:, n+1] = ψ[:, n] .* exp.(sim.dt/2 * coeffs.γ.(ψ[:, n]))  ## this is an Euler step
     end
     ψ_spect[:, time_steps] = fft(ψ[:, time_steps])
-    #fig = Plots.plot(space, abs.(fwd_disp), show=true)
 
     tmargin_l = Int(floor(time_steps/2))
     tmargin_r = Int(ceil(time_steps/2))
@@ -47,9 +46,8 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     z_points = 1000
     t_skip = Int(ceil(20 * state.width/sim.dt /t_points))
     z_skip = Int(ceil(space_steps/z_points))
-    #print(abs.(ifft(ψ_spect[:, 1:10])))
 
     # Natural orientation choice for plot 
     fig2 = Plots.heatmap(time*1e3, space*1e3, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
-    # fig3 = Plots.surface(abs.(ψ[1:z_skip:space_steps, tmargin_l:t_skip:tmargin_r]), show=true)
+    #fig3 = Plots.surface(time*1e3, space*1e3, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
   end
