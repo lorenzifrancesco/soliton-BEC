@@ -5,15 +5,15 @@ using Printf
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(20e-3, #T
-  1e-5, #dt
-  1e-3, #S
-  1e-6, #ds
+  5e-6, #dt
+  1e-4, #S
+  1e-7, #ds
   "GPE") #ds
 
 khaykovich_npse = Simulation(20e-3, #T
   1e-5, #dt
-  1e-3, #S
-  1e-6, #ds
+  1e-4, #S
+  1e-7, #ds
   "NPSE") #ds
 
 npse_sim = Simulation(300e-3, #T      ##exibits Talbot
@@ -26,15 +26,15 @@ npse_sim = Simulation(300e-3, #T      ##exibits Talbot
 std_apparatus = Apparatus(6.941 * 1.660539e-27, #m (conversion AMU -> kg)
                -0.21e-9, #as
                2*pi*710, # omega_perp
-               2e4) # N
+               6e3) # N
 
 ## --------- InitialStates ---------   
-InitialState1 =  InitialState(1e-6,
+InitialState1 =  InitialState(1.7e-6,
                 0)    
 
 ## Configurations
-configs = [(khaykovich_gpe, std_apparatus, InitialState1), 
-          (khaykovich_npse, std_apparatus, InitialState1), ]
+configs = [(khaykovich_gpe, std_apparatus, InitialState1)] 
+    #      (khaykovich_npse, std_apparatus, InitialState1), ]
 mem_limit = 15000000000 #byte
 cnt=1
 for (sim, app, state) in configs
