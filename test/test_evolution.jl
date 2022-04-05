@@ -36,8 +36,10 @@ InitialState1 =  InitialState(1e-6,
 configs = [(khaykovich_gpe, std_apparatus, InitialState1), 
           (khaykovich_npse, std_apparatus, InitialState1), ]
 mem_limit = 15000000000 #byte
-
+cnt=1
 for (sim, app, state) in configs
+  global cnt
+  @printf("\n------Running simulation # %3i \n", cnt)
   estimate = mem_estimate(sim)
   if estimate < mem_limit
     @printf("Estimated memory consumption: %4.1f MiB\n", estimate/(1024^2))
@@ -45,4 +47,5 @@ for (sim, app, state) in configs
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate/(1024^2))
   end
+  cnt+=1
 end
