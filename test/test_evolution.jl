@@ -3,33 +3,38 @@ using Printf
 
 ### SIMULATE GENERATION OF SOLITON IN Li-7 CONDENSATE
 
-## Simulation
-std_sim = Simulation(300e-3, #T
-  5e-4, #dt
-  100e-6, #S
-  1e-8,
+# --------- Simulation ---------
+khaykovich_gpe = Simulation(20e-3, #T
+  1e-5, #dt
+  1e-3, #S
+  1e-6, #ds
   "GPE") #ds
 
-npse_sim = Simulation(300e-3, #T
+khaykovich_npse = Simulation(20e-3, #T
+  1e-5, #dt
+  1e-3, #S
+  1e-6, #ds
+  "NPSE") #ds
+
+npse_sim = Simulation(300e-3, #T      ##exibits Talbot
   5e-4, #dt
   100e-6, #S
-  1e-8,
-  "NPSE") #ds
+  1e-8, #ds
+  "NPSE") 
   
-## Apparata
-std_apparatus = Apparatus(1e-26, #m
-               1.4e-9, #as
-               400, # omega_perp
-               4e8) # N
+# --------- Apparata ---------
+std_apparatus = Apparatus(6.941 * 1.660539e-27, #m (conversion AMU -> kg)
+               -0.21e-9, #as
+               2*pi*710, # omega_perp
+               2e4) # N
 
-## InitialStates      
-InitialState1 =  InitialState(1,
-                2e-12,
+## --------- InitialStates ---------   
+InitialState1 =  InitialState(1e-6,
                 0)    
 
-## Configuration
-configs = [(std_sim, std_apparatus, InitialState1), 
-(npse_sim, std_apparatus, InitialState1)]
+## Configurations
+configs = [(khaykovich_gpe, std_apparatus, InitialState1), 
+          (khaykovich_npse, std_apparatus, InitialState1), ]
 mem_limit = 15000000000 #byte
 
 for (sim, app, state) in configs
