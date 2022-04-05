@@ -29,7 +29,7 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     ## [SPACE INDEX, TIME INDEX]
     ψ[:, 1] = waveform
 
-    fwd_disp = exp.(sim.dt * coeffs.α * k.^2)
+    fwd_disp = exp.(sim.dt/2 * coeffs.α * k.^2)
     curvature = coeffs.β.(space)
 
     @showprogress "Propagating the field... " for n = 1:time_steps-1
