@@ -4,13 +4,13 @@ using Printf
 ### SIMULATE GENERATION OF SOLITON IN Li-7 CONDENSATE
 
 # --------- Simulation ---------
-khaykovich_gpe = Simulation(20e-3, #T
+khaykovich_gpe = Simulation(10e-3, #T
   5e-6, #dt
   1e-4, #S
   1e-7, #ds
   "GPE") #ds
 
-khaykovich_npse = Simulation(20e-3, #T
+khaykovich_npse = Simulation(10e-3, #T
   1e-5, #dt
   1e-4, #S
   1e-7, #ds
@@ -24,13 +24,15 @@ npse_sim = Simulation(300e-3, #T      ##exibits Talbot
   
 # --------- Apparata ---------
 std_apparatus = Apparatus(6.941 * 1.660539e-27, #m (conversion AMU -> kg)
-               -0.21e-9, #as
-               2*pi*710, # omega_perp
-               6e3) # N
+               -0.21e-14, #as
+               2*pi*710, # ω_perp
+               6e2, #N
+               1.77e-11, # γ
+               2*pi*4) # ω_z
 
 ## --------- InitialStates ---------   
 InitialState1 =  InitialState(1.7e-6,
-                0)    
+                1)    
 
 ## Configurations
 configs = [(khaykovich_gpe, std_apparatus, InitialState1)] 
