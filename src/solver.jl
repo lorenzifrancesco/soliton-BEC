@@ -1,4 +1,5 @@
 function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
+    pyplot()
     time_steps = Int(floor(sim.T/sim.dt))
     space_steps = Int(floor(sim.S/sim.ds))
     time = LinRange(0, sim.T, time_steps)
@@ -16,20 +17,29 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     ψ_spect = zeros(ComplexF64, space_steps, time_steps)
     
     #Implement external initial state 
+    wave1(s::Float64) = sqrt(1/ (sqrt(2*pi)* state.width)) * exp.(-(s).^2 / (4*state.width^2))
+    wave2(s::Float64) = sqrt(1/(pi * state.width)) * 1 ./(exp.(-(s/(4*state.width))) .+ exp.(s/(4*state.width)))
+  
     if state.sech_flag == 0 # Gaussian Pulse
-      waveform = 1/ (sqrt(2*pi)* state.width) * exp.(-(space).^2 / (2*state.width^2))
+      wave = wave1
     else # Sech Pulse
-      waveform = 1/(pi * state.width) * 1 ./(exp.(-(space/(2*state.width))) .+ exp.(space/(2*state.width)))
+      wave = wave2
     end
-    #fig = Plots.plot(space, waveform, show=true)
+    #fig = plot(space, wave.(space), show=true)
+    ## check waveform integral normalization
+    integral, error = quadgk(s -> abs(wave(s))^2, -sim.S/2, +sim.S/2)
+    display(integral)
+    display(error)
+    waveform = wave.(space)
+    
 
     ## [SPACE INDEX, TIME INDEX]
     ψ[:, 1] = waveform
 
     fwd_disp = exp.(sim.dt/2 .* coeffs.α * k.^2)
     fwd_curvature = exp.(sim.dt/2 .* coeffs.β.(space))
-    display("Gamma at peak")
-    display(coeffs.γ.(ψ[Int(floor(space_steps/2)),1]))
+    # display("Gamma at peak")
+    # display(coeffs.γ.(ψ[Int(floor(space_steps/2)),1]))
     @showprogress "Propagating the field... " for n = 1:time_steps-1
       ψ_spect[:, n] = fft(ψ[:, n])
       ψ_spect[:, n] = ψ_spect[:, n] .* fwd_disp .* fwd_curvature
@@ -46,6 +56,7 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     z_skip = Int(ceil(space_steps/z_points))
 
     # Natural orientation choice for plot 
-    fig2 = Plots.heatmap!(time*1e3, space*1e3, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
-    #fig3 = Plots.surface(time*1e3, space*1e3, abs.(ψ[:, :]), show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]")
+    fig2 =heatmap(time*1e3, space*1e3, abs.(ψ[:, :]).^2, show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]", colorrange=(0, 1),reuse=false)
+    fig3 = plot(space*1e3, abs.(ψ[:, time_steps]).^2, title = "evolved wavefunction", xlabel="space [mm]", reuse=false, label="t=t_max")
+    plot!(space*1e3, abs.(ψ[:, 1]).^2, show=true, reuse=false, label="t=0")
   end
