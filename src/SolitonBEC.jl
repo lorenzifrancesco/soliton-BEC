@@ -5,8 +5,9 @@ export Simulation, Apparatus, InitialState, run_simulation, mem_estimate, graphi
 using Printf
 using PhysicalConstants
 using FFTW
-using Plots
+using Plots; pyplot()
 using ProgressMeter
+using QuadGK
 
 include("physics.jl")
 include("solver.jl")
