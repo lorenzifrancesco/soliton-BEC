@@ -1,4 +1,4 @@
-function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
+function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState, app::Apparatus)
     pyplot()
     time_steps = Int(floor(sim.T/sim.dt))
     space_steps = Int(floor(sim.S/sim.ds))
@@ -17,7 +17,7 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     ψ_spect = zeros(ComplexF64, space_steps, time_steps)
     
     #Implement external initial state 
-    wave1(s::Float64) = sqrt(1/ (sqrt(2*pi)* state.width)) * exp.(-(s).^2 / (4*state.width^2))
+    wave1(s::Float64) = sqrt(1/ (sqrt(2*pi)* state.width)) * exp.(-(s).^2 / (4*state.width^2)) * exp(im*s*1.5e6)
     wave2(s::Float64) = sqrt(1/(2 * state.width)) * 2 ./(exp.(-(s/(state.width))) .+ exp.(s/(state.width)))
   
     if state.sech_flag == 0 # Gaussian Pulse
@@ -25,8 +25,9 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     else # Sech Pulse
       wave = wave2
     end
-    fig = plot(space, wave1.(space), show=true)
-    plot!(space, wave2.(space), show=true)
+    fig = plot(space, abs.(coeffs.β.(space)), show=true)
+    # fig = plot(space, wave1.(space), show=true)
+    # plot!(space, wave2.(space), show=true)
     ## check waveform integral normalization
     integral, error = quadgk(s -> abs(wave(s))^2, -sim.S/2, +sim.S/2)
     display(integral)
@@ -42,10 +43,14 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     # display("Gamma at peak")
     # display(coeffs.γ.(ψ[Int(floor(space_steps/2)),1]))
     @showprogress "Propagating the field... " for n = 1:time_steps-1
+      # if 1+2*app.as*(app.N - 1) * abs.(ψ[Int(floor(space_steps/2)), n])^2 > 1
+      #   display("Collapse detected")
+      #   return
+      # end
       ψ_spect[:, n] = fft(ψ[:, n])
-      ψ_spect[:, n] = ψ_spect[:, n] .* fwd_disp .* fwd_curvature
+      ψ_spect[:, n] = ψ_spect[:, n] .* fwd_disp
       ψ[:, n] = ifft(ψ_spect[:, n])
-      ψ[:, n+1] = ψ[:, n] .* exp.(sim.dt/2 .* coeffs.γ.(ψ[:, n]))  ## this is an Euler step
+      ψ[:, n+1] = ψ[:, n] .* exp.(sim.dt/2 .* coeffs.γ.(ψ[:, n])) .* fwd_curvature  ## this is an Euler step
     end
     ψ_spect[:, time_steps] = fft(ψ[:, time_steps])
 
@@ -61,7 +66,7 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
                    space*1e3, 
                    abs.(ψ[:, :]).^2, 
                    show=true, 
-                   title = "wavefunction", 
+                   title = "|ψ|^2", 
                    ylabel="space [mm]", 
                    xlabel="time [ms]", 
                    colorrange=(0, 1),
@@ -69,7 +74,7 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
 
     fig3 = plot(space*1e3,
                 abs.(ψ[:, time_steps]).^2,
-                title = "evolved wavefunction",
+                title = "evolved |ψ|^2",
                 xlabel="space [mm]", 
                 reuse=false, 
                 label="t=t_max")
