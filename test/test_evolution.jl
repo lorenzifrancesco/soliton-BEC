@@ -6,7 +6,7 @@ using Printf
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(20e-3, #T
   5e-5, #dt
-  1e-4, #S
+  2e-4, #S
   1e-7, #ds
   "GPE") #ds
 

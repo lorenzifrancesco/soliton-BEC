@@ -46,7 +46,7 @@ function get_coefficients(sim::Simulation, app::Apparatus, state::InitialState)
         γ=γ1
     elseif (sim.equation == "GPE")
         α = -im * hbar/(2*app.m) 
-        β2(s) = - im * app.ω_perp - im * hbar * exp(-(s-30e-6)^2/(5e-6)^2) *1e14 / (8*app.m)
+        β2(s) = - im * app.ω_perp - im * hbar * exp(-(s-30e-6)^2/(5e-6)^2) *9e12 / (8*app.m)
         #display( 2 * hbar * app.as * (app.N - 1) / (app.m * l_perp^2))
         γ2(ψ::ComplexF64) = - im * 2 * hbar * app.as * (app.N - 1) / (app.m * l_perp^2) * abs.(ψ)^2
         β=β2
