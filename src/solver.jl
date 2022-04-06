@@ -1,8 +1,3 @@
-using FFTW
-using Plots
-import Plotly
-using ProgressMeter
-
 function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     time_steps = Int(floor(sim.T/sim.dt))
     space_steps = Int(floor(sim.S/sim.ds))

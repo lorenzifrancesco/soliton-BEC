@@ -1,13 +1,15 @@
-uuid = "0cfda548-32e7-4e8b-936e-99ee36e5dad1"
 name = "SolitonBEC"
+uuid = "0cfda548-32e7-4e8b-936e-99ee36e5dad1"
 authors = ["lorenzifrancesco <francesco.lorenzi.2@studenti.unipd.it>"]
 version = "0.1.0"
 
 [deps]
-
-
-[compat]
-
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+PhysicalConstants = "5ad8b20f-a522-5ce9-bfc9-ddf1d5bda6ab"
+PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 
 [extras]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
