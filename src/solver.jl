@@ -18,14 +18,15 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     
     #Implement external initial state 
     wave1(s::Float64) = sqrt(1/ (sqrt(2*pi)* state.width)) * exp.(-(s).^2 / (4*state.width^2))
-    wave2(s::Float64) = sqrt(1/(pi * state.width)) * 1 ./(exp.(-(s/(4*state.width))) .+ exp.(s/(4*state.width)))
+    wave2(s::Float64) = sqrt(1/(2 * state.width)) * 2 ./(exp.(-(s/(state.width))) .+ exp.(s/(state.width)))
   
     if state.sech_flag == 0 # Gaussian Pulse
       wave = wave1
     else # Sech Pulse
       wave = wave2
     end
-    #fig = plot(space, wave.(space), show=true)
+    fig = plot(space, wave1.(space), show=true)
+    plot!(space, wave2.(space), show=true)
     ## check waveform integral normalization
     integral, error = quadgk(s -> abs(wave(s))^2, -sim.S/2, +sim.S/2)
     display(integral)
@@ -56,7 +57,25 @@ function ssfm_solve(sim::Simulation, coeffs::Coefficients, state::InitialState)
     z_skip = Int(ceil(space_steps/z_points))
 
     # Natural orientation choice for plot 
-    fig2 =heatmap(time*1e3, space*1e3, abs.(ψ[:, :]).^2, show=true, title = "wavefunction", ylabel="space [mm]", xlabel="time [ms]", colorrange=(0, 1),reuse=false)
-    fig3 = plot(space*1e3, abs.(ψ[:, time_steps]).^2, title = "evolved wavefunction", xlabel="space [mm]", reuse=false, label="t=t_max")
-    plot!(space*1e3, abs.(ψ[:, 1]).^2, show=true, reuse=false, label="t=0")
+    fig2 = heatmap(time*1e3, 
+                   space*1e3, 
+                   abs.(ψ[:, :]).^2, 
+                   show=true, 
+                   title = "wavefunction", 
+                   ylabel="space [mm]", 
+                   xlabel="time [ms]", 
+                   colorrange=(0, 1),
+                   reuse=false)
+
+    fig3 = plot(space*1e3,
+                abs.(ψ[:, time_steps]).^2,
+                title = "evolved wavefunction",
+                xlabel="space [mm]", 
+                reuse=false, 
+                label="t=t_max")
+    plot!(space*1e3, 
+          abs.(ψ[:, 1]).^2, 
+          show=true, 
+          reuse=false, 
+          label="t=0")
   end
