@@ -38,15 +38,16 @@ function get_coefficients(sim::Simulation, app::Apparatus, state::InitialState)
     npse_gamma = app.γ * hbar * app.ω_perp / l_z^6
     @assert(sim.equation in ["NPSE", "GPE"])
     if (sim.equation == "NPSE")
-        α = im * hbar/(2*app.m)
+        α = -im * hbar/(2*app.m)
         β1(s) = im * hbar / (8*app.m)
         σ(ψ::ComplexF64) = l_perp * sqrt(sqrt(1+2*app.as*(app.N - 1) * abs.(ψ)^2))
         γ1(ψ::ComplexF64) = - im * hbar/ (2*app.m * σ(ψ)^2) - im * app.m * app.ω_perp^2 / (2*hbar) * σ(ψ)^2 - im * 2 * hbar * app.as * (app.N - 1)/(app.m * σ(ψ)^2) * abs.(ψ)^2 - npse_gamma * app.N^2 * abs.(ψ)^4
         β=β1
         γ=γ1
     elseif (sim.equation == "GPE")
-        α = im * hbar/(2*app.m) 
+        α = -im * hbar/(2*app.m) 
         β2(s) = - im * app.ω_perp + im * hbar / (8*app.m)
+        #display( 2 * hbar * app.as * (app.N - 1) / (app.m * l_perp^2))
         γ2(ψ::ComplexF64) = - im * 2 * hbar * app.as * (app.N - 1) / (app.m * l_perp^2) * abs.(ψ)^2
         β=β2
         γ=γ2
