@@ -5,24 +5,24 @@ using Elliptic
 ### SIMULATE GENERATION OF SOLITON IN Li-7 CONDENSATE
 
 # --------- Simulation ---------
-khaykovich_gpe = Simulation(20e-3, #T
+khaykovich_gpe = Simulation(50e-3, #T
   5e-5, #dt
-  10e-6 * E(2*pi, 0.9), #S
-  10e-9 * E(2*pi, 0.9), #ds
+  10e-5 * E(2 * pi, 0.9), #S
+  10e-8 * E(2 * pi, 0.9), #ds
   "GPE",
-  "ellipse") #ds
+  "barrier") #ds
 
 khaykovich_npse = Simulation(10e-3, #T
   1e-5, #dt
-  10e-6 * E(2*pi, 0.9), #S
-  10e-9 * E(2*pi, 0.9), #ds
+  10e-6 * E(2 * pi, 0.9), #S
+  10e-9 * E(2 * pi, 0.9), #ds
   "NPSE",
   "ellipse") #ds
 
 npse_sim = Simulation(300e-3, #T      ##exibits Talbot
   5e-4, #dt
-  10e-6 * E(2*pi, 0.9), #S
-  10e-9 * E(2*pi, 0.9), #ds
+  10e-6 * E(2 * pi, 0.9), #S
+  10e-9 * E(2 * pi, 0.9), #ds
   "NPSE",
   "ellipse")
 
