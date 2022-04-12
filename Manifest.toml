@@ -143,6 +143,11 @@ git-tree-sha1 = "3f3a2501fa7236e9b911e0f7a588c657e822bb6d"
 uuid = "5ae413db-bbd1-5e63-b57d-d24a61df00f5"
 version = "2.2.3+0"
 
+[[deps.Elliptic]]
+git-tree-sha1 = "71c79e77221ab3a29918aaf6db4f217b89138608"
+uuid = "b305315f-e792-5b7a-8f41-49f472929428"
+version = "1.0.1"
+
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "bad72f730e9e91c08d9427d5e8db95478a3c323d"
