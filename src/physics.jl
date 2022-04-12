@@ -50,10 +50,9 @@ function β(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
         upper_ϕ = 3 * pi
         let error
             let midpoint
-                error = target_error+1
+                error = target_error + 1
                 while error > target_error
                     midpoint = (lower_ϕ + upper_ϕ) / 2
-                    display(midpoint)
                     if s - app.a * E(midpoint, app.ϵ) > 0
                         lower_ϕ = midpoint
                     else
@@ -61,8 +60,7 @@ function β(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
                     end
                     error = abs(s - app.a * E(midpoint, app.ϵ))
                 end
-                display(midpoint)
-                value +=  im *  hbar * (1 / app.a * (sqrt(1 - app.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - app.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8*app.m)  * 150
+                value += im * hbar * (1 / app.a * (sqrt(1 - app.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - app.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8 * app.m) * 150
             end
         end
     end
@@ -104,5 +102,10 @@ end
 function run_simulation(sim::Simulation, app::Apparatus, state::InitialState)
     coeffs = get_coefficients(sim, app, state)
     describe_simulation(sim, app, state)
+    
+    display("Running Dynamical simulation")
     ssfm_solve(sim, coeffs, state, app)
+    
+    display("Running ground-state simulation")
+    ground_state_solve(sim, coeffs, state, app)
 end
