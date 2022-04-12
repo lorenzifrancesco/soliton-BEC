@@ -8,6 +8,7 @@ using FFTW
 using Plots; pyplot()
 using ProgressMeter
 using QuadGK
+using Elliptic
 
 include("physics.jl")
 include("solver.jl")
