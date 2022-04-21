@@ -5,6 +5,7 @@ struct Simulation
     ds::Float64
     equation::String #("GPE", "NPSE")
     potential::String #("barrier", "ellipse")
+    static::Bool
 end
 
 
@@ -102,10 +103,11 @@ end
 function run_simulation(sim::Simulation, app::Apparatus, state::InitialState)
     coeffs = get_coefficients(sim, app, state)
     describe_simulation(sim, app, state)
-    
-    display("Running Dynamical simulation")
-    ssfm_solve(sim, coeffs, state, app)
-    
-    display("Running ground-state simulation")
-    ground_state_solve(sim, coeffs, state, app)
+    if sim.static
+        display("Running ground-state simulation")
+        ground_state_solve(sim, coeffs, state, app)
+    else
+        display("Running Dynamic simulation")
+        ssfm_solve(sim, coeffs, state, app)
+    end
 end
