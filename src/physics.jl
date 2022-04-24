@@ -46,7 +46,7 @@ function potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     l_z = sqrt(hbar / (app.m * app.ω_z))
     if pot.type == "barrier"
-        value = -im * hbar * pot.energy / (sqrt(2 * pi) * pot.width) * exp(-(s - pot.position)^2 / (2 * (pot.width))^2) / (8 * app.m)
+        value = hbar^2 * pot.energy / (sqrt(2 * pi) * pot.width) * exp(-(s - pot.position)^2 / (2 * (pot.width))^2) / (8 * app.m)
     elseif pot.type == "ellipse"
         target_error = 0.001 * pot.a
         lower_ϕ = -pi
@@ -63,7 +63,7 @@ function potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
                     end
                     error = abs(s - pot.a * E(midpoint, pot.ϵ))
                 end
-                value = im * hbar * (1 / pot.a * (sqrt(1 - pot.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - pot.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8 * app.m)
+                value = -hbar^2 * (1 / pot.a * (sqrt(1 - pot.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - pot.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8 * app.m)
             end
         end
     end
@@ -80,7 +80,7 @@ function β(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     elseif (sim.equation == "GPE")
         value = -im * app.ω_perp * 0
     end
-    value += potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
+    value += (-im / hbar) * potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     return value
 end
 
