@@ -115,7 +115,7 @@ function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state
     α = -im * hbar / (2 * app.m)
     beta(s::Float64) = β(sim::Simulation, app::Apparatus, pot::Potential, s)
     gamma(ψ::ComplexF64) = γ(sim::Simulation, app::Apparatus, state::InitialState, ψ)
-    initial_state(s::Float64) = wave(state::InitialState)
+    initial_state(s::Float64) = wave(sim::Simulation, app::Apparatus, state::InitialState, s)
     return Coefficients(α, beta, gamma, initial_state)
 end
 

@@ -16,14 +16,18 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   ψ = zeros(ComplexF64, space_steps, time_steps)
   ψ_spect = zeros(ComplexF64, space_steps, time_steps)
 
-
-  fig = plot(space, abs.(coeffs.β.(space)), show=true)
-
-  integral, error = quadgk(s -> abs(wave(s))^2, -num.S / 2, +num.S / 2)
-  display(integral)
-  display(error)
   waveform = coeffs.initial.(space)
-
+  fig0 = plot(space * 1e3,
+    abs.(waveform) .^ 2,
+    title="initial configuration",
+    xlabel="space [mm]",
+    reuse=false,
+    label="initial state")
+  fig1 = plot(space * 1e3,
+    abs.(coeffs.β.(space)),
+    show=true,
+    reuse=false,
+    label="potential")
 
   ## [SPACE INDEX, TIME INDEX]
   ψ[:, 1] = waveform
@@ -101,13 +105,6 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
 end
 
 function plot_dynamics(time, space, ψ, ψ_spect)
-  tmargin_l = Int(floor(time_steps / 2))
-  tmargin_r = Int(ceil(time_steps / 2))
-  t_points = 10000
-  z_points = 1000
-  t_skip = Int(ceil(20 * state.width / num.dt / t_points))
-  z_skip = Int(ceil(space_steps / z_points))
-
   # Natural orientation choice for plot 
   fig2 = heatmap(time * 1e3,
     space * 1e3,
@@ -120,7 +117,7 @@ function plot_dynamics(time, space, ψ, ψ_spect)
     reuse=false)
 
   fig3 = plot(space * 1e3,
-    abs.(ψ[:, time_steps]) .^ 2,
+    abs.(ψ[:, end]) .^ 2,
     title="evolved |ψ|^2",
     xlabel="space [mm]",
     reuse=false,
@@ -133,14 +130,6 @@ function plot_dynamics(time, space, ψ, ψ_spect)
 end
 
 function plot_ground_state(time, space, ψ, ψ_spect)
-
-  tmargin_l = Int(floor(time_steps / 2))
-  tmargin_r = Int(ceil(time_steps / 2))
-  t_points = 10000
-  z_points = 1000
-  t_skip = Int(ceil(20 * state.width / num.dt / t_points))
-  z_skip = Int(ceil(space_steps / z_points))
-
   # Natural orientation choice for plot 
   fig3 = plot(space * 1e3,
     abs.(ψ) .^ 2,
