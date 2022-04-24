@@ -1,11 +1,12 @@
 module SolitonBEC
 
-export Simulation, Apparatus, InitialState, run_simulation, mem_estimate, graphics_config
+export Numerics, Simulation, Apparatus, Potential, InitialState, run_dynamics, run_ground_state, mem_estimate, graphics_config
 
 using Printf
 using PhysicalConstants
 using FFTW
-using Plots; pyplot()
+using Plots
+pyplot()
 using ProgressMeter
 using QuadGK
 using Elliptic

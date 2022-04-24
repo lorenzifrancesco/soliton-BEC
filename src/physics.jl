@@ -42,7 +42,7 @@ struct Coefficients
 end
 
 
-function β(sim::Simulation, app::Apparatus, pot:Potential, s::Float64)
+function β(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     l_z = sqrt(hbar / (app.m * app.ω_z))
@@ -52,10 +52,10 @@ function β(sim::Simulation, app::Apparatus, pot:Potential, s::Float64)
         value = -im * app.ω_perp
     end
 
-    if sim.potential == "barrier"
-        value += -im * hbar * exp(-(s - 15e-6)^2 / (5e-6)^2) * 9e12 / (8 * app.m)
-    elseif sim.potential == "ellipse"
-        target_error = 0.01 * app.a
+    if pot.type == "barrier"
+        value += -im * hbar * pot.energy / (sqrt(2 * pi) * pot.width) * exp(-(s - pot.position)^2 / (2 * (pot.width))^2) / (8 * app.m)
+    elseif pot.type == "ellipse"
+        target_error = 0.01 * pot.a
         lower_ϕ = -pi
         upper_ϕ = 3 * pi
         let error
@@ -63,14 +63,14 @@ function β(sim::Simulation, app::Apparatus, pot:Potential, s::Float64)
                 error = target_error + 1
                 while error > target_error
                     midpoint = (lower_ϕ + upper_ϕ) / 2
-                    if s - app.a * E(midpoint, app.ϵ) > 0
+                    if s - pot.a * E(midpoint, pot.ϵ) > 0
                         lower_ϕ = midpoint
                     else
                         upper_ϕ = midpoint
                     end
-                    error = abs(s - app.a * E(midpoint, app.ϵ))
+                    error = abs(s - pot.a * E(midpoint, pot.ϵ))
                 end
-                value += im * hbar * (1 / app.a * (sqrt(1 - app.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - app.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8 * app.m) * 150
+                value += im * hbar * (1 / pot.a * (sqrt(1 - pot.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - pot.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8 * app.m) * 150
             end
         end
     end
@@ -95,11 +95,11 @@ end
 
 function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
 
- if state.type == "gaussian" # Gaussian Pulse
-   return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * 1.5e6)
- elseif state.type == "sech"
-   return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width)))
- end
+    if state.type == "gaussian" # Gaussian Pulse
+        return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * 1.5e6)
+    elseif state.type == "sech"
+        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width)))
+    end
 
 end
 
@@ -121,19 +121,20 @@ end
 
 
 function run_ground_state(num::Numerics, sim::Simulation, app::Apparatus, state::InitialState)
+
     coeffs = get_coefficients(sim, app, state)
-    describe_simulation(sim, app, state)
-        display("Running ground-state simulation")
-        results = ground_state_solve(num, coeffs, state, app)
-        plot_ground_state(results...)
+
+    display("Running ground-state simulation")
+    results = ground_state_solve(num, coeffs, app)
+    plot_ground_state(results...)
 end
 
 
-function run_dynamics(num::Numerics, sim::Simulation, app::Apparatus, pot:Potential state::InitialState)
+function run_dynamics(num::Numerics, sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
+
     coeffs = get_coefficients(sim, app, pot, state)
-    describe_simulation(sim, app, state)
-        display("Running Dynamic simulation")
-        results = ssfm_solve(num, coeffs, state, app)
-        plot_dynamics(results...)
-    end
+
+    display("Running Dynamic simulation")
+    results = ssfm_solve(num, coeffs)
+    plot_dynamics(results...)
 end

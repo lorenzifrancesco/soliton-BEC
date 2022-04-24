@@ -1,5 +1,5 @@
 
-function ssfm_solve(num::Numerics, sim::Simulation, coeffs::Coefficients, app::Apparatus)
+function ssfm_solve(num::Numerics, coeffs::Coefficients)
   pyplot()
   time_steps = Int(floor(num.T / num.dt))
   space_steps = Int(floor(num.S / num.ds))
@@ -48,7 +48,7 @@ function ssfm_solve(num::Numerics, sim::Simulation, coeffs::Coefficients, app::A
 end
 
 
-function ground_state_solve(num::Numerics, coeffs::Coefficients, state::InitialState, app::Apparatus)
+function ground_state_solve(num::Numerics, coeffs::Coefficients)
   pyplot()
   time_steps = Int(floor(num.T / num.dt))
   space_steps = Int(floor(num.S / num.ds))
