@@ -53,7 +53,8 @@ std_apparatus = Apparatus(
 velocity
 InitialState1 = InitialState(
   "sech", #type
-  1.7e-6 # width
+  1.7e-6, # width
+  1.5e6 #v0
 )
 
 ## Configurations

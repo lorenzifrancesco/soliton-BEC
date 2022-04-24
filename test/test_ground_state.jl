@@ -50,7 +50,8 @@ std_apparatus = Apparatus(
 # --------- InitialStates ---------   
 InitialState1 = InitialState(
   "sech", #type
-  1.7e-6 # width
+  1.7e-6, # width
+  0e6 #v0
 )
 
 ## Configurations

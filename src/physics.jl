@@ -32,6 +32,7 @@ end
 struct InitialState
     type::String
     width::Float64 # m
+    v0::Float64
 end
 
 struct Coefficients
@@ -103,7 +104,7 @@ end
 function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
 
     if state.type == "gaussian" # Gaussian Pulse
-        return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * 1.5e6)
+        return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * state.v0)
     elseif state.type == "sech"
         return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width)))
     end

@@ -51,7 +51,8 @@ std_apparatus = Apparatus(
 # --------- InitialStates ---------   
 InitialState1 = InitialState(
   "sech", #type
-  1.7e-6 # width
+  1.7e-6, # width
+  1.5e6 #v0
 )
 
 ## Configurations
@@ -64,7 +65,6 @@ cnt = 1
 
 angle = LinRange(0, 2 * pi, 100)
 
-#plot(angle, -(sqrt(1 - 0.9^2) ./ (sin.(angle) .^ 2 + sqrt(1 - 0.9^2) * cos.(angle) .^ 2) .^ (3 / 2)) .^ 2, show=true)
 for (num, sim, pot, app, state) in configs
 
   global cnt
