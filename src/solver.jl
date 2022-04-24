@@ -16,17 +16,19 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   ψ_spect = zeros(ComplexF64, space_steps, time_steps)
 
   waveform = coeffs.initial.(space)
-  fig0 = plot(space * 1e3,
-    abs.(waveform) .^ 2,
-    title="initial configuration",
-    xlabel="space [mm]",
-    reuse=false,
-    label="initial state")
-  fig1 = plot(space * 1e3,
-    abs.(coeffs.β.(space)),
-    show=true,
-    reuse=false,
-    label="potential")
+  # fig0 = plot(space * 1e3,
+  #   abs.(waveform) .^ 2,
+  #   title="initial configuration",
+  #   xlabel="space [mm]",
+  #   show=true,
+  #   reuse=false,
+  #   label="initial state")
+
+  # fig1 = plot(space * 1e3,
+  #   abs.(coeffs.β.(space)),
+  #   show=true,
+  #   reuse=false,
+  #   label="potential")
 
   ## [SPACE INDEX, TIME INDEX]
   ψ[:, 1] = waveform
