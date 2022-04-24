@@ -31,7 +31,7 @@ end
 
 struct InitialState
     type::String
-    width::Float64 # m
+    width::Float64
     v0::Float64
 end
 
@@ -77,9 +77,9 @@ function β(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     l_z = sqrt(hbar / (app.m * app.ω_z))
     if (sim.equation == "NPSE")
-        value = 0 * im * hbar / (8 * app.m)
+        value = im * hbar / (8 * app.m)
     elseif (sim.equation == "GPE")
-        value = -im * app.ω_perp * 0
+        value = -im * app.ω_perp
     end
     value += (-im / hbar) * potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     return value
@@ -106,7 +106,7 @@ function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
     if state.type == "gaussian" # Gaussian Pulse
         return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * state.v0)
     elseif state.type == "sech"
-        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width)))
+        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width))) * exp(im * s * state.v0)
     end
 
 end
