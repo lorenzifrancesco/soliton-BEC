@@ -8,11 +8,11 @@ using Elliptic
 hbar = 6.62607015e-34 / (2 * pi)
 
 # --------- Numerics ---------
-L = 10e-6
+L = 100e-6
 
 num = Numerics(
-  50e-3, #T
-  5e-5, #dt
+  50e-4, #T
+  5e-6, #dt
   L, #S
   L * 1e-3, #ds
 )
@@ -29,8 +29,8 @@ khaykovich_gpe = Simulation(
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 5e-2, #width
-    L / 3, #position
+    1e-7, #width
+    15e-6, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -53,16 +53,15 @@ std_apparatus = Apparatus(
 velocity = 1.5e6
 InitialState1 = InitialState(
   "sech", #type
-  1.7e-6, # width
+  5e-6, # width
   velocity #v0
 )
 
 ## Configurations
 configs = []
-for energy in 1:10
-  energy = energy * 1e-6
+for energy in LinRange(1e6, 100e6, 6)
   potential = barrier_height(energy)
-  push!(configs, (num, khaykovich_gpe, potential, std_apparatus, InitialState1))
+  push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
 end
 
 display(configs)
@@ -70,25 +69,17 @@ mem_limit = 15000000000 #byte
 cnt = 1
 
 pyplot()
-
-## Curvature potential--------------------------------------------
-
-fig1 = plot(title="curvature potential",
-  xlabel="s/L",)
-
-for (num, sim, pot, app, state) in configs
-  characteristic_energy = hbar^2 / (app.m * pot.a^2)
-
-  space_steps = Int(floor(num.S / num.ds))
-  space = LinRange(-num.S / 2, num.S / 2, space_steps)
-  plot!(fig1, space / L, -abs.(map(s -> potential(sim, app, pot, s), space)) / characteristic_energy, reuse=false,
-    label="ϵ = $(pot.ϵ)")
-end
-
+p = Plots.palette(:jet1, 11)
 
 ## Soliton - barrier collision --------------------------------------------
+@time run_dynamics(configs[4]...)
 
-for (num, sim, pot, app, state) in configs
+fig1 = plot(title="|ψ|^2 after collision with barrier",
+  xlabel="space [mm]",
+  ylabel="|ψ|^2",
+  reuse=false)
+
+for (num, sim, app, pot, state) in configs
 
   global cnt
   @printf("\n------Running simulation # %3i \n", cnt)
@@ -96,7 +87,22 @@ for (num, sim, pot, app, state) in configs
 
   if estimate < mem_limit
     @printf("Estimated memory consumption: %4.1f MiB\n", estimate / (1024^2))
-    @time run_dynamics(num, sim, app, pot, state)
+
+    coeffs = get_coefficients(sim, app, pot, state)
+
+    time_steps = Int(floor(num.T / num.dt))
+    space_steps = Int(floor(num.S / num.ds))
+    time = LinRange(0, num.T, time_steps)
+    space = LinRange(-num.S / 2, num.S / 2, space_steps)
+
+    # plot(space / L, -abs.(map(s -> potential(sim, app, pot, s), space)), show=true, reuse=false, title="potential")
+    space, time, ψ, ψ_spect = @time ssfm_solve(num, coeffs)
+    plot!(fig1, space * 1e3,
+      abs.(ψ[:, time_steps]) .^ 2,
+      label="energy = $(pot.energy)",
+      palette=p)
+
+
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end
@@ -104,3 +110,4 @@ for (num, sim, pot, app, state) in configs
   cnt += 1
 
 end
+display(fig1)
