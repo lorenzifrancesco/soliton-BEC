@@ -2,16 +2,20 @@ using SolitonBEC
 using Printf
 using Plots
 using Elliptic
+hbar = 6.62607015e-34 / (2 * pi)
 
 ### SIMULATE GENERATION OF SOLITON IN Li-7 CONDENSATE
 
 # --------- Numerics ---------
+L = 10e-6
+
 num = Numerics(
   50e-3, #T
   5e-5, #dt
-  10e-6 * E(2 * pi, 0.9), #S
-  10e-9 * E(2 * pi, 0.9), #ds
+  L, #S
+  L * 1e-3, #ds
 )
+
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
@@ -20,14 +24,17 @@ khaykovich_gpe = Simulation(
 )
 
 #--------- Potential ---------
-ellipse(ecc) = Potential(
-  "ellipse", # type 
-  5e-6, #width
-  15e-6, #position
-  5e-6, #energy
-  ecc, #ϵ
-  10e-6 #a
-)
+function elliptical(ecc::Float64)
+  r = Potential(
+    "ellipse", # type 
+    5e-6, #width
+    15e-6, #position
+    5e-6, #energy
+    ecc, #ϵ
+    L / E(2 * pi, ecc) #a
+  )
+  return r
+end
 
 barrier = Potential(
   "barrier", #type
@@ -55,25 +62,68 @@ InitialState1 = InitialState(
 )
 
 ## Configurations
-configs = [
-  (num, khaykovich_gpe, ellipse, std_apparatus, InitialState1),
-  #(num, khaykovich_gpe, barrier, std_apparatus, InitialState1), 
-]
+configs = []
+for ecc in [0, 0.5, 0.75, 0.9]
+  potential = elliptical(ecc)
+  push!(configs, (num, khaykovich_gpe, potential, std_apparatus, InitialState1))
+end
+
+display(configs)
 mem_limit = 15000000000 #byte
 cnt = 1
 
-angle = LinRange(0, 2 * pi, 100)
 
-#plot(angle, -(sqrt(1 - 0.9^2) ./ (sin.(angle) .^ 2 + sqrt(1 - 0.9^2) * cos.(angle) .^ 2) .^ (3 / 2)) .^ 2, show=true)
+## Curvature potential--------------------------------------------
+
+fig1 = plot(title="curvature potential",
+  xlabel="space [mm]",)
+
 for (num, sim, pot, app, state) in configs
+  char_energy = hbar^2 / (app.m * pot.a^2)
 
+  space_steps = Int(floor(num.S / num.ds))
+  space = LinRange(-num.S / 2, num.S / 2, space_steps)
+  plot!(space * 1e3, abs.(map(s -> potential(sim, app, pot, s), space)) / char_energy, reuse=false,
+    show=true,
+    label="ϵ = $(pot.ϵ)")
+end
+
+
+## Ground state--------------------------------------------
+
+fig2 = plot(title="stationary |ψ|^2",
+  xlabel="space [mm]",)
+
+for (num, sim, pot, app, state) in configs
   global cnt
   @printf("\n------Running simulation # %3i \n", cnt)
   estimate = mem_estimate(num)
 
   if estimate < mem_limit
+
     @printf("Estimated memory consumption: %4.1f MiB\n", estimate / (1024^2))
-    @time run_ground_state(num, sim, app, pot, state)
+
+    # Natural orientation choice for plot 
+    coeffs = get_coefficients(sim, app, pot, state)
+
+    time_steps = Int(floor(num.T / num.dt))
+    space_steps = Int(floor(num.S / num.ds))
+    time = LinRange(0, num.T, time_steps)
+    space = LinRange(-num.S / 2, num.S / 2, space_steps)
+
+    plot!(fig1, space * 1e3,
+      abs.(coeffs.β.(space)), reuse=false,
+      show=true,
+      label=r"t={pot.ϵ}")
+
+    # space, time, ψ = @time ground_state_solve(num, coeffs)
+    # plot!(fig2, space * 1e3,
+    #   abs.(ψ) .^ 2, reuse=false,
+    #   show=true,
+    #   label=r"t={pot.ϵ}")
+
+
+
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end
