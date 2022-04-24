@@ -70,7 +70,11 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
   ψ = zeros(ComplexF64, space_steps)
   ψ_spect = zeros(ComplexF64, space_steps)
 
-  waveform = coeffs.initial.(space)
+  #Implement gaussian initial state 
+  wave(s::Float64) = sqrt(1 / (sqrt(2 * pi) * num.S / 3)) * exp.(-(s) .^ 2 / (4 * num.S / 3^2))
+  integral, error = quadgk(s -> abs(wave(s))^2, -num.S / 2, +num.S / 2)
+
+  waveform = wave.(space) / sqrt(integral)
 
   ## [SPACE INDEX, TIME INDEX]
   ψ[:] = waveform

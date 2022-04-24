@@ -120,12 +120,12 @@ function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state
 end
 
 
-function run_ground_state(num::Numerics, sim::Simulation, app::Apparatus, state::InitialState)
+function run_ground_state(num::Numerics, sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
 
-    coeffs = get_coefficients(sim, app, state)
+    coeffs = get_coefficients(sim, app, pot, state)
 
     display("Running ground-state simulation")
-    results = ground_state_solve(num, coeffs, app)
+    results = ground_state_solve(num, coeffs)
     plot_ground_state(results...)
 end
 

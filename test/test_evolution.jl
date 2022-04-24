@@ -56,8 +56,8 @@ InitialState1 = InitialState(
 
 ## Configurations
 configs = [
-  (khaykovich_gpe, std_apparatus, InitialState1),
-  #(khaykovich_npse, std_apparatus, InitialState1), 
+  (num, khaykovich_gpe, barrier, std_apparatus, InitialState1),
+  #(num, khaykovich_gpe, barrier, std_apparatus, InitialState1), 
 ]
 mem_limit = 15000000000 #byte
 cnt = 1
@@ -65,7 +65,7 @@ cnt = 1
 angle = LinRange(0, 2 * pi, 100)
 
 #plot(angle, -(sqrt(1 - 0.9^2) ./ (sin.(angle) .^ 2 + sqrt(1 - 0.9^2) * cos.(angle) .^ 2) .^ (3 / 2)) .^ 2, show=true)
-for (sim, app, state) in configs
+for (num, sim, pot, app, state) in configs
 
   global cnt
   @printf("\n------Running simulation # %3i \n", cnt)
@@ -73,7 +73,7 @@ for (sim, app, state) in configs
 
   if estimate < mem_limit
     @printf("Estimated memory consumption: %4.1f MiB\n", estimate / (1024^2))
-    @time run_dynamics(num, sim, app, ellipse, state)
+    @time run_dynamics(num, sim, app, pot, state)
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end
