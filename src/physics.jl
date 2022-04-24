@@ -41,21 +41,14 @@ struct Coefficients
     initial::Function
 end
 
-
-function β(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
+function potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     l_z = sqrt(hbar / (app.m * app.ω_z))
-    if (sim.equation == "NPSE")
-        value = im * hbar / (8 * app.m)
-    elseif (sim.equation == "GPE")
-        value = -im * app.ω_perp
-    end
-
     if pot.type == "barrier"
-        value += -im * hbar * pot.energy / (sqrt(2 * pi) * pot.width) * exp(-(s - pot.position)^2 / (2 * (pot.width))^2) / (8 * app.m)
+        value = -im * hbar * pot.energy / (sqrt(2 * pi) * pot.width) * exp(-(s - pot.position)^2 / (2 * (pot.width))^2) / (8 * app.m)
     elseif pot.type == "ellipse"
-        target_error = 0.01 * pot.a
+        target_error = 0.001 * pot.a
         lower_ϕ = -pi
         upper_ϕ = 3 * pi
         let error
@@ -70,10 +63,24 @@ function β(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
                     end
                     error = abs(s - pot.a * E(midpoint, pot.ϵ))
                 end
-                value += im * hbar * (1 / pot.a * (sqrt(1 - pot.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - pot.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8 * app.m) * 150
+                value = im * hbar * (1 / pot.a * (sqrt(1 - pot.ϵ^2)) / (sin(midpoint)^2 + sqrt(1 - pot.ϵ^2) * cos(midpoint)^2)^(3 / 2))^2 / (8 * app.m)
             end
         end
     end
+    return value
+end
+
+
+function β(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
+    hbar = 6.62607015e-34 / (2 * pi)
+    l_perp = sqrt(hbar / (app.m * app.ω_perp))
+    l_z = sqrt(hbar / (app.m * app.ω_z))
+    if (sim.equation == "NPSE")
+        value = 0 * im * hbar / (8 * app.m)
+    elseif (sim.equation == "GPE")
+        value = -im * app.ω_perp * 0
+    end
+    value += potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     return value
 end
 

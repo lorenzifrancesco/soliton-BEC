@@ -1,6 +1,6 @@
 module SolitonBEC
 
-export Numerics, Simulation, Apparatus, Potential, InitialState, run_dynamics, run_ground_state, mem_estimate, graphics_config
+export Numerics, Simulation, Apparatus, Potential, InitialState, run_dynamics, run_ground_state, ssfm_solve, ground_state_solve, get_coefficients, potential, mem_estimate, graphics_config
 
 using Printf
 using PhysicalConstants
