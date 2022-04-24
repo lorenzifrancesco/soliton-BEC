@@ -9,8 +9,8 @@ using Elliptic
 num = Numerics(
   50e-3, #T
   5e-5, #dt
-  10e-5 * E(2 * pi, 0.9), #S
-  10e-8 * E(2 * pi, 0.9), #ds
+  10e-6 * E(2 * pi, 0.9), #S
+  10e-9 * E(2 * pi, 0.9), #ds
 )
 
 # --------- Simulation ---------
