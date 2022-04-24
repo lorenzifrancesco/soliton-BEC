@@ -4,44 +4,44 @@ using Plots
 using Elliptic
 ### SIMULATE GENERATION OF SOLITON IN Li-7 CONDENSATE
 
+# --------- Numerics ---------
+std = Numerics(
+  T=50e-3,
+  dt=5e-5,
+  S=10e-5 * E(2 * pi, 0.9),
+  ds=10e-8 * E(2 * pi, 0.9),
+)
+
 # --------- Simulation ---------
-khaykovich_gpe = Simulation(50e-3, #T
-  5e-5, #dt
-  10e-5 * E(2 * pi, 0.9), #S
-  10e-8 * E(2 * pi, 0.9), #ds
+khaykovich_gpe = Simulation(
   "GPE",
   "barrier",
-  false) #ds
+) #ds
 
-khaykovich_npse = Simulation(10e-3, #T
-  1e-5, #dt
-  10e-6 * E(2 * pi, 0.9), #S
-  10e-9 * E(2 * pi, 0.9), #ds
-  "NPSE",
-  "ellipse",
-  false) #ds
+#--------- Potential ---------
+ellipse = Potential(
+  type="ellipse",)
 
-npse_sim = Simulation(300e-3, #T      ##exibits Talbot
-  5e-4, #dt
-  10e-6 * E(2 * pi, 0.9), #S
-  10e-9 * E(2 * pi, 0.9), #ds
-  "NPSE",
-  "ellipse",
-  false)
+barrier = Potential(
+  type="barrier",)
 
 # --------- Apparata ---------
-std_apparatus = Apparatus(6.941 * 1.660539e-27, #m (conversion AMU -> kg)
-  -0.21e-9, #as
-  2 * pi * 710, # ω_perp
-  4e3, #N
-  1.77e-11, # γ
-  2 * pi * 4, # ω_z
-  0.9,
-  10e-6)
+std_apparatus = Apparatus(
+  m=6.941 * 1.660539e-27, #m (conversion AMU -> kg)
+  as=-0.21e-9, # m
+  ω_perp=2 * pi * 710, # rad/s
+  N=4e3,
+  γ=1.77e-11,
+  ω_z=2 * pi * 4,
+  ϵ=0.9,
+  a=10e-6
+)
 
-## --------- InitialStates ---------   
-InitialState1 = InitialState(1.7e-6,
-  0)
+# --------- InitialStates ---------   
+InitialState1 = InitialState(
+  type="sech",
+  width=1.7e-6
+)
 
 ## Configurations
 configs = [
@@ -60,7 +60,7 @@ for (sim, app, state) in configs
   estimate = mem_estimate(sim)
   if estimate < mem_limit
     @printf("Estimated memory consumption: %4.1f MiB\n", estimate / (1024^2))
-    @time run_simulation(sim, app, state)
+    @time run_dynamics(num, sim, app, potential, state)
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end

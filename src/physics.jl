@@ -1,13 +1,24 @@
-struct Simulation
+struct Numerics
     T::Float64
     dt::Float64
     S::Float64
     ds::Float64
-    equation::String #("GPE", "NPSE")
-    potential::String #("barrier", "ellipse")
-    static::Bool
 end
 
+struct Simulation
+    equation::String #("GPE", "NPSE")
+    potential::String #("barrier", "ellipse")
+end
+
+
+struct Potential
+    type::String
+    width::Float64
+    position::Float64
+    energy::Float64
+    ϵ::Float64
+    a::Float64
+end
 
 struct Apparatus
     m::Float64 # kg ω
@@ -16,24 +27,22 @@ struct Apparatus
     N::Int64
     γ::Float64
     ω_z::Float64
-    ϵ::Float64
-    a::Float64
 end
-
 
 struct InitialState
+    type::String
     width::Float64 # m
-    sech_flag::Float64 # 1 or 0
 end
-
 
 struct Coefficients
     α::ComplexF64
     β::Function
     γ::Function
+    initial::Function
 end
 
-function β(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
+
+function β(sim::Simulation, app::Apparatus, pot:Potential, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     l_z = sqrt(hbar / (app.m * app.ω_z))
@@ -68,6 +77,7 @@ function β(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
     return value
 end
 
+
 function γ(sim::Simulation, app::Apparatus, state::InitialState, ψ::ComplexF64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
@@ -83,31 +93,47 @@ function γ(sim::Simulation, app::Apparatus, state::InitialState, ψ::ComplexF64
 end
 
 
-function get_coefficients(sim::Simulation, app::Apparatus, state::InitialState)
+function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
+
+ if state.type == "gaussian" # Gaussian Pulse
+   return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * 1.5e6)
+ elseif state.type == "sech"
+   return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width)))
+ end
+
+end
+
+function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
     # implement with PhysicalConstants.CODATA2018.h
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     l_z = sqrt(hbar / (app.m * app.ω_z))
     npse_gamma = app.γ * hbar * app.ω_perp / l_z^6 * 1e-4
     @assert(sim.equation in ["NPSE", "GPE"])
-    @assert(sim.potential in ["barrier", "ellipse", ""])
+    @assert(pot.type in ["barrier", "ellipse", ""])
 
     α = -im * hbar / (2 * app.m)
-    beta(s::Float64) = β(sim::Simulation, app::Apparatus, state::InitialState, s)
+    beta(s::Float64) = β(sim::Simulation, app::Apparatus, pot::Potential, s)
     gamma(ψ::ComplexF64) = γ(sim::Simulation, app::Apparatus, state::InitialState, ψ)
-
-    return Coefficients(α, beta, gamma)
+    initial_state(s::Float64) = wave(state::InitialState)
+    return Coefficients(α, beta, gamma, initial_state)
 end
 
 
-function run_simulation(sim::Simulation, app::Apparatus, state::InitialState)
+function run_ground_state(num::Numerics, sim::Simulation, app::Apparatus, state::InitialState)
     coeffs = get_coefficients(sim, app, state)
     describe_simulation(sim, app, state)
-    if sim.static
         display("Running ground-state simulation")
-        ground_state_solve(sim, coeffs, state, app)
-    else
+        results = ground_state_solve(num, coeffs, state, app)
+        plot_ground_state(results...)
+end
+
+
+function run_dynamics(num::Numerics, sim::Simulation, app::Apparatus, pot:Potential state::InitialState)
+    coeffs = get_coefficients(sim, app, pot, state)
+    describe_simulation(sim, app, state)
         display("Running Dynamic simulation")
-        ssfm_solve(sim, coeffs, state, app)
+        results = ssfm_solve(num, coeffs, state, app)
+        plot_dynamics(results...)
     end
 end
