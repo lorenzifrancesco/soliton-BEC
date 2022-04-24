@@ -8,13 +8,13 @@ using Elliptic
 hbar = 6.62607015e-34 / (2 * pi)
 
 # --------- Numerics ---------
-L = 100e-6
+L = 200e-6
 
 num = Numerics(
   50e-4, #T
   5e-6, #dt
   L, #S
-  L * 1e-3, #ds
+  L * 1e-4, #ds
 )
 
 
@@ -69,10 +69,10 @@ mem_limit = 15000000000 #byte
 cnt = 1
 
 pyplot()
-p = Plots.palette(:jet1, 11)
+p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 
 ## Soliton - barrier collision --------------------------------------------
-#@time run_dynamics(configs[4]...)
+#@time run_dynamics(configs[2]...)
 
 fig1 = plot(title="|ψ|^2 after collision with barrier",
   xlabel="space [mm]",
@@ -90,20 +90,20 @@ for (num, sim, app, pot, state) in configs
 
     coeffs = get_coefficients(sim, app, pot, state)
 
-    time_steps = Int(floor(num.T / num.dt))
-    space_steps = Int(floor(num.S / num.ds))
-    time = LinRange(0, num.T, time_steps)
-    space = LinRange(-num.S / 2, num.S / 2, space_steps)
-
-    # plot(space / L, -abs.(map(s -> potential(sim, app, pot, s), space)), show=true, reuse=false, title="potential")
-    space, time, ψ, ψ_spect = @time ssfm_solve(num, coeffs)
-    plot!(fig1, space * 1e3,
-      abs.(ψ[:, time_steps]) .^ 2,
+    time, space, ψ, ψ_spect = @time ssfm_solve(num, coeffs)
+    plot!(space * 1e3,
+      abs.(ψ[:, end]) .^ 2,
       label="energy = $(pot.energy)",
       lw=2,
-      palette=p)
+      color=p[cnt])
 
-
+    plot!(space * 1e3,
+      abs.(map(s -> potential(sim, app, pot, s), space)) / hbar,
+      lw=1,
+      ls=:dot,
+      label=nothing,
+      color=p[cnt])
+    display(space)
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end
