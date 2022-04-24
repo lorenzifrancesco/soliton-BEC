@@ -1,10 +1,11 @@
+### TEST FOR THE GROUND STATE OF ELLIPTICAL WAVEGUIDE FOR DIFFERENT ECCENTRICITY
+## PLOTTING RESULTS IN NORMALIZED COORDINATES AS Salasnich - SciPost Physics (2022)
+
 using SolitonBEC
 using Printf
 using Plots
 using Elliptic
 hbar = 6.62607015e-34 / (2 * pi)
-
-### SIMULATE GENERATION OF SOLITON IN Li-7 CONDENSATE
 
 # --------- Numerics ---------
 L = 10e-6
