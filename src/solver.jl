@@ -1,6 +1,5 @@
 
 function ssfm_solve(num::Numerics, coeffs::Coefficients)
-  pyplot()
   time_steps = Int(floor(num.T / num.dt))
   space_steps = Int(floor(num.S / num.ds))
   time = LinRange(0, num.T, time_steps)
@@ -53,7 +52,6 @@ end
 
 
 function ground_state_solve(num::Numerics, coeffs::Coefficients)
-  pyplot()
   time_steps = Int(floor(num.T / num.dt))
   space_steps = Int(floor(num.S / num.ds))
   time = LinRange(0, num.T, time_steps)
@@ -107,7 +105,9 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
   return time, space, ψ, ψ_spect
 end
 
+
 function plot_dynamics(time, space, ψ, ψ_spect)
+  pyplot()
   # Natural orientation choice for plot 
   fig2 = heatmap(time * 1e3,
     space * 1e3,
@@ -132,7 +132,9 @@ function plot_dynamics(time, space, ψ, ψ_spect)
     label="t=0")
 end
 
+
 function plot_ground_state(time, space, ψ, ψ_spect)
+  pyplot()
   # Natural orientation choice for plot 
   fig3 = plot(space * 1e3,
     abs.(ψ) .^ 2,

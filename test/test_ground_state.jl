@@ -72,19 +72,18 @@ display(configs)
 mem_limit = 15000000000 #byte
 cnt = 1
 
-
+pyplot()
 ## Curvature potential--------------------------------------------
 
 fig1 = plot(title="curvature potential",
-  xlabel="space [mm]",)
+  xlabel="s/L",)
 
 for (num, sim, pot, app, state) in configs
-  char_energy = hbar^2 / (app.m * pot.a^2)
+  characteristic_energy = hbar^2 / (app.m * pot.a^2)
 
   space_steps = Int(floor(num.S / num.ds))
   space = LinRange(-num.S / 2, num.S / 2, space_steps)
-  plot!(space * 1e3, abs.(map(s -> potential(sim, app, pot, s), space)) / char_energy, reuse=false,
-    show=true,
+  plot!(fig1, space / L, -abs.(map(s -> potential(sim, app, pot, s), space)) / characteristic_energy, reuse=false,
     label="ϵ = $(pot.ϵ)")
 end
 
@@ -92,7 +91,9 @@ end
 ## Ground state--------------------------------------------
 
 fig2 = plot(title="stationary |ψ|^2",
-  xlabel="space [mm]",)
+  xlabel="space [mm]",
+  ylabel="ρ(s) * a",
+  reuse=false)
 
 for (num, sim, pot, app, state) in configs
   global cnt
@@ -111,19 +112,14 @@ for (num, sim, pot, app, state) in configs
     time = LinRange(0, num.T, time_steps)
     space = LinRange(-num.S / 2, num.S / 2, space_steps)
 
-    plot!(fig1, space * 1e3,
-      abs.(coeffs.β.(space)), reuse=false,
-      show=true,
-      label=r"t={pot.ϵ}")
-
-    # space, time, ψ = @time ground_state_solve(num, coeffs)
-    # plot!(fig2, space * 1e3,
-    #   abs.(ψ) .^ 2, reuse=false,
-    #   show=true,
-    #   label=r"t={pot.ϵ}")
+    space, time, ψ = @time ground_state_solve(num, coeffs)
+    plot!(fig2, space * 1e3,
+      abs.(ψ) .^ 2 * pot.a,
+      label="ϵ = $(pot.ϵ)")
 
 
-
+    display(fig1)
+    display(fig2)
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end
