@@ -37,15 +37,6 @@ function elliptical(ecc::Float64)
   return r
 end
 
-barrier = Potential(
-  "barrier", #type
-  5e-6, #width
-  15e-6, #position
-  5e-6, #energy
-  0.9, #ϵ
-  10e-6 #a
-)
-
 # --------- Apparata ---------
 std_apparatus = Apparatus(
   6.941 * 1.660539e-27, #m (conversion AMU -> kg)
