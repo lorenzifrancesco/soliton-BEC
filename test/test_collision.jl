@@ -59,7 +59,7 @@ InitialState1 = InitialState(
 
 ## Configurations
 configs = []
-for energy in LinRange(1e6, 100e6, 6)
+for energy in LinRange(1e6, 40e6, 4)
   potential = barrier_height(energy)
   push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
 end
@@ -72,7 +72,7 @@ pyplot()
 p = Plots.palette(:jet1, 11)
 
 ## Soliton - barrier collision --------------------------------------------
-@time run_dynamics(configs[4]...)
+#@time run_dynamics(configs[4]...)
 
 fig1 = plot(title="|ψ|^2 after collision with barrier",
   xlabel="space [mm]",
@@ -100,6 +100,7 @@ for (num, sim, app, pot, state) in configs
     plot!(fig1, space * 1e3,
       abs.(ψ[:, time_steps]) .^ 2,
       label="energy = $(pot.energy)",
+      lw=2,
       palette=p)
 
 
