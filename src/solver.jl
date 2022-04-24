@@ -78,7 +78,6 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
 
   ## [SPACE INDEX, TIME INDEX]
   ψ[:] = waveform
-  plot(space, abs.(waveform), show=true)
   fwd_disp = exp.(-im * num.dt / 2 .* coeffs.α * k .^ 2)
   fwd_curvature = exp.(-im * num.dt / 2 .* coeffs.β.(space))
   # display("Gamma at peak")
@@ -97,7 +96,7 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
       ψ = ifft(ψ_spect)
       ψ = ψ .* exp.(im * num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
       # renormalization
-      display(sum(abs.(ψ) .^ 2 * num.ds))
+      #isplay(sum(abs.(ψ) .^ 2 * num.ds))
       current = sum(abs.(ψ) .^ 2 * num.ds)
       Δ = abs(prev - current)
       ψ = ψ / sqrt(current)
