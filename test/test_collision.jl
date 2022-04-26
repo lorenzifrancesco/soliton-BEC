@@ -6,14 +6,17 @@ using Printf
 using Plots
 using Elliptic
 hbar = 6.62607015e-34 / (2 * pi)
-interaction_g = 2 / (5e-6)^2 # 2/width^2
-
+width = 1.42e-6
+interaction_g = 2 / (width)^2 # 2/width^2
+velocity = 0.8 * interaction_g
+display(velocity)
 # --------- Numerics ---------
-L = 100e-6
+T = 10e-4
+L = 2 * velocity * T
 
 num = Numerics(
-  10e-4, #T
-  1e-6, #dt
+  T, #T
+  T * 1e-3, #dt
   L, #S
   L * 1e-3, #ds
 )
@@ -30,8 +33,8 @@ khaykovich_gpe = Simulation(
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    1e-7, #width
-    15e-6, #position
+    L * 1e-3 / 3, #width
+    L / 4, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -52,9 +55,7 @@ std_apparatus = Apparatus(
 
 # --------- InitialStates ---------   
 width = sqrt(2 / interaction_g)
-
-velocity = 0.8 * interaction_g
-
+display(width)
 InitialState1 = InitialState(
   "sech", #type
   width, # width
