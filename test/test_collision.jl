@@ -26,8 +26,8 @@ khaykovich_gpe = Simulation(
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 1e-3 / 3, #width
-    40e-6, #position
+    L * 1e-3 * 10, #width
+    30e-6, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -56,12 +56,11 @@ InitialState1 = InitialState(
 
 ## Configurations
 configs = []
-for energy in LinRange(1e-37, 30e-37, 5)
+for energy in LinRange(1e-37, 100e-37, 5)
   potential = barrier_height(energy)
   push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
 end
 
-display(configs)
 mem_limit = 15000000000 #byte
 cnt = 1
 
@@ -69,13 +68,14 @@ pyplot()
 p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 
 ## Soliton - barrier collision --------------------------------------------
-@time run_dynamics(configs[1]...)
+@time run_dynamics(configs[5]...)
 
 fig1 = plot(title="|ψ|^2 after collision with barrier",
   xlabel="space [mm]",
   ylabel="|ψ|^2",
   reuse=false,
-  size=(800, 400))
+  size=(800, 400),
+  legend=:topleft)
 
 for (num, sim, app, pot, state) in configs
 
