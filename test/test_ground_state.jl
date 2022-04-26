@@ -8,7 +8,7 @@ using Elliptic
 hbar = 6.62607015e-34 / (2 * pi)
 
 # --------- Numerics ---------
-L = 10e-6
+L = 100e-6
 
 num = Numerics(
   50e-3, #T
@@ -20,8 +20,8 @@ num = Numerics(
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
-  "GPE",
-  "barrier",
+  "NPSE",
+  "ellipse",
 )
 
 #--------- Potential ---------
@@ -66,10 +66,14 @@ mem_limit = 15000000000 #byte
 cnt = 1
 
 pyplot()
+plt_width = 800
+plt_height = 600
 ## Curvature potential--------------------------------------------
 
-fig1 = plot(title="curvature potential",
-  xlabel="s/L",)
+fig1 = plot(title="",
+  xlabel="s/L",
+  ylabel="U_Q/E_a",
+  size=(plt_width, plt_height))
 
 for (num, sim, pot, app, state) in configs
   characteristic_energy = hbar^2 / (app.m * pot.a^2)
@@ -83,10 +87,11 @@ end
 
 ## Non Interacting ground state--------------------------------------------
 
-fig2 = plot(title="stationary density",
-  xlabel="space [mm]",
+fig2 = plot(title="",
+  xlabel="s/L",
   ylabel="ρ(s) * a",
-  reuse=false)
+  reuse=false,
+  size=(plt_width, plt_height))
 
 for (num, sim, pot, app, state) in configs
   global cnt
@@ -105,11 +110,10 @@ for (num, sim, pot, app, state) in configs
     time = LinRange(0, num.T, time_steps)
     space = LinRange(-num.S / 2, num.S / 2, space_steps)
 
-    space, time, ψ = @time ground_state_solve(num, coeffs)
-    plot!(fig2, space * 1e3,
+    time, space, ψ = @time ground_state_solve(num, coeffs)
+    plot!(fig2, space / L,
       abs.(ψ) .^ 2 * pot.a,
       label="ϵ = $(pot.ϵ)")
-
 
     display(fig1)
     display(fig2)
@@ -139,16 +143,20 @@ as_apparatus(as) = Apparatus(
 )
 l_perp = sqrt(hbar / (mass * ω_perp))
 
-for gamma in [-10, -5, -1, -0.1, 0, 0.1, 1, 5, 10]
+for gamma in [-1, -1.5, -2, -3, 2, 3]
   as = gamma * l_perp^2 / (2 * fixed_potential.a * (Num - 1))
   display(as_apparatus(as))
   push!(configs_gamma, (num, khaykovich_gpe, fixed_potential, as_apparatus(as), InitialState1))
 end
+p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs_gamma) + 3)
 
-fig3 = plot(title="stationary density",
-  xlabel="space [mm]",
+
+fig3 = plot(title="",
+  xlabel="s/L",
   ylabel="ρ(s) * a",
-  reuse=false)
+  reuse=false,
+  size=(plt_width, plt_height),
+  palette=p)
 
 for (num, sim, pot, app, state) in configs_gamma
   global cnt
@@ -167,9 +175,9 @@ for (num, sim, pot, app, state) in configs_gamma
     time = LinRange(0, num.T, time_steps)
     space = LinRange(-num.S / 2, num.S / 2, space_steps)
 
-    space, time, ψ = @time ground_state_solve(num, coeffs)
+    time, space, ψ = @time ground_state_solve(num, coeffs)
     γ = (2 * pot.a * app.as * (app.N - 1)) / (l_perp^2)
-    plot!(fig3, space * 1e3,
+    plot!(fig3, space / L,
       abs.(ψ) .^ 2 * pot.a,
       label="γ = $(γ)")
 
