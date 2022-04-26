@@ -7,9 +7,40 @@ using Plots
 using Elliptic
 hbar = 6.62607015e-34 / (2 * pi)
 width = 1.42e-6
-interaction_g = 2 / (width)^2 # 2/width^2
-velocity = 0.8 * interaction_g
+mass = 6.941 * 1.660539e-27
+omega_perp = 2 * pi * 710
+l_perp = sqrt(hbar / (mass * omega_perp))
+
+# --------- Simulation ---------
+khaykovich_gpe = Simulation(
+  "GPE",
+  "barrier",
+)
+
+# --------- Apparata ---------
+std_apparatus = Apparatus(
+  mass, #m (conversion AMU -> kg)
+  -0.21e-9, # as
+  omega_perp, # ω_perp
+  4e3, #N
+  1.77e-11, #γ
+  2 * pi * 4,# ω_z
+)
+
+interaction_g = 2 * hbar^2 / mass * std_apparatus.as * (std_apparatus.N - 1) / width^2 # 2/width^2
+display(interaction_g)
+
+# Energy = 1 / 2 * (std_apparatus.as^2 / (width^2) + std_apparatus.as^2 / (2 * l_perp^2) + width^2 / std_apparatus.as^2 - interaction_g * std_apparatus.as^3 / (l_perp * width^2)) * hbar * omega_perp
+μ = interaction_g^2 / 8
+Energy = (velocity^2 / (2 * mass) * std_apparatus.m + μ) * (std_apparatus.N)
+display(Energy)
+
+# adimensionalization
+velocity = 0.8 * width
+velocity_coefficient = Energy / (hbar * velocity)
 display(velocity)
+display(velocity_coefficient)
+
 # --------- Numerics ---------
 T = 10e-4
 L = 2 * velocity * T
@@ -21,20 +52,20 @@ num = Numerics(
   L * 1e-3, #ds
 )
 
-
-# --------- Simulation ---------
-khaykovich_gpe = Simulation(
-  "GPE",
-  "barrier",
+# --------- InitialStates ---------   
+display(width)
+InitialState1 = InitialState(
+  "sech", #type
+  width, # width
+  velocity_coefficient #v0
 )
-
 #--------- Potential ---------
 
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
     L * 1e-3 / 3, #width
-    L / 4, #position
+    L * 3 / 4, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -42,35 +73,16 @@ function barrier_height(energy::Float64)
   return r
 end
 
-
-# --------- Apparata ---------
-std_apparatus = Apparatus(
-  6.941 * 1.660539e-27, #m (conversion AMU -> kg)
-  -0.21e-9, # as
-  2 * pi * 710, # ω_perp
-  4e3, #N
-  1.77e-11, #γ
-  2 * pi * 4,# ω_z
-)
-
-# --------- InitialStates ---------   
-width = sqrt(2 / interaction_g)
-display(width)
-InitialState1 = InitialState(
-  "sech", #type
-  width, # width
-  -velocity #v0
-)
-
 ## Configurations
 configs = []
+
 for energy_vs_g in LinRange(-0.5, -1.5, 4)
-  energy = interaction_g * energy_vs_g
+  energy = abs(interaction_g) * energy_vs_g
   potential = barrier_height(energy)
   push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
 end
 
-display(configs)
+#display(configs)
 mem_limit = 15000000000 #byte
 cnt = 1
 
@@ -80,7 +92,7 @@ plt_height = 600
 p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 
 ## Soliton - barrier collision --------------------------------------------
-@time run_dynamics(configs[2]...)
+@time run_dynamics(configs[1]...)
 
 fig1 = plot(title="|ψ|^2 after collision with barrier",
   xlabel="space [mm]",
@@ -106,12 +118,12 @@ for (num, sim, app, pot, state) in configs
       lw=2,
       color=p[cnt])
 
-    # plot!(space * 1e3,
-    #   abs.(map(s -> potential(sim, app, pot, s), space)) / hbar,
-    #   lw=1,
-    #   ls=:dot,
-    #   label=nothing,
-    #   color=p[cnt])
+    plot!(space * 1e3,
+      abs.(map(s -> potential(sim, app, pot, s), space)) / hbar,
+      lw=1,
+      ls=:dot,
+      label=nothing,
+      color=p[cnt])
   else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end
