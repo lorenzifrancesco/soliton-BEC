@@ -47,7 +47,7 @@ function potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     l_z = sqrt(hbar / (app.m * app.ω_z))
     if pot.type == "barrier"
-        value = hbar^2 * pot.energy / (sqrt(2 * pi) * pot.width) * exp(-(s - pot.position)^2 / (2 * (pot.width))^2) / (8 * app.m)
+        value = pot.energy / (sqrt(2 * pi) * pot.width) * exp(-(s - pot.position)^2 / (2 * (pot.width))^2)
     elseif pot.type == "ellipse"
         target_error = 0.001 * pot.a
         lower_ϕ = -pi

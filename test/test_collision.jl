@@ -26,7 +26,7 @@ khaykovich_gpe = Simulation(
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    1e-7, #width
+    L * 1e-3 / 3, #width
     40e-6, #position
     energy, #energy
     0, #ϵ
@@ -56,7 +56,7 @@ InitialState1 = InitialState(
 
 ## Configurations
 configs = []
-for energy in LinRange(1e6, 40e6, 4)
+for energy in LinRange(1e-37, 30e-37, 5)
   potential = barrier_height(energy)
   push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
 end
@@ -74,7 +74,8 @@ p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 fig1 = plot(title="|ψ|^2 after collision with barrier",
   xlabel="space [mm]",
   ylabel="|ψ|^2",
-  reuse=false)
+  reuse=false,
+  size=(800, 400))
 
 for (num, sim, app, pot, state) in configs
 
@@ -90,8 +91,8 @@ for (num, sim, app, pot, state) in configs
     time, space, ψ, ψ_spect = @time ssfm_solve(num, coeffs)
     plot!(space * 1e3,
       abs.(ψ[:, end]) .^ 2,
-      label="energy = $(pot.energy) [AU]",
-      lw=2,
+      label="peak potential = $(pot.energy / (sqrt(2 * pi) * pot.width) /1.602176634e-19)   [eV]",
+      lw=1,
       color=p[cnt])
 
     plot!(space * 1e3,
