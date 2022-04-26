@@ -1,6 +1,3 @@
-### TEST FOR THE GROUND STATE OF ELLIPTICAL WAVEGUIDE FOR DIFFERENT ECCENTRICITY
-## PLOTTING RESULTS IN NORMALIZED COORDINATES AS Salasnich - SciPost Physics (2022)
-
 using SolitonBEC
 using Printf
 using Plots
@@ -11,10 +8,10 @@ hbar = 6.62607015e-34 / (2 * pi)
 L = 200e-6
 
 num = Numerics(
-  50e-4, #T
+  100e-4, #T
   5e-6, #dt
   L, #S
-  L * 1e-4, #ds
+  L * 1e-3, #ds
 )
 
 
@@ -30,7 +27,7 @@ function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
     1e-7, #width
-    15e-6, #position
+    40e-6, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -53,7 +50,7 @@ std_apparatus = Apparatus(
 velocity = 1.5e6
 InitialState1 = InitialState(
   "sech", #type
-  5e-6, # width
+  2.4e-6, # width
   velocity #v0
 )
 
@@ -72,7 +69,7 @@ pyplot()
 p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 
 ## Soliton - barrier collision --------------------------------------------
-#@time run_dynamics(configs[2]...)
+@time run_dynamics(configs[1]...)
 
 fig1 = plot(title="|ψ|^2 after collision with barrier",
   xlabel="space [mm]",
@@ -93,7 +90,7 @@ for (num, sim, app, pot, state) in configs
     time, space, ψ, ψ_spect = @time ssfm_solve(num, coeffs)
     plot!(space * 1e3,
       abs.(ψ[:, end]) .^ 2,
-      label="energy = $(pot.energy)",
+      label="energy = $(pot.energy) [AU]",
       lw=2,
       color=p[cnt])
 
