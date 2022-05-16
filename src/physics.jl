@@ -102,13 +102,16 @@ end
 
 
 function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
-
+    hbar = 6.62607015e-34 / (2 * pi)
+    l_perp = sqrt(hbar / (app.m * app.ω_perp))
+    interaction_g = 2*hbar^2 * app.as / app.m / l_perp^2
+    Energy = interaction_g * app.N * state.width
+    vel_coeff = -Energy/hbar/state.v0
     if state.type == "gaussian" # Gaussian Pulse
         return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * state.v0)
     elseif state.type == "sech"
-        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width))) * exp(im * s * state.v0)
+        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width))) * exp(im * s * vel_coeff)
     end
-
 end
 
 function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
