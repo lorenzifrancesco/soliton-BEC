@@ -38,12 +38,13 @@ interaction_g = 2 * hbar^2 / mass * std_apparatus.as * (std_apparatus.N - 1) / w
 display(interaction_g)
 
 # Energy = 1 / 2 * (std_apparatus.as^2 / (width^2) + std_apparatus.as^2 / (2 * l_perp^2) + width^2 / std_apparatus.as^2 - interaction_g * std_apparatus.as^3 / (l_perp * width^2)) * hbar * omega_perp
-μ = interaction_g^2 / 8
-Energy = (velocity^2 / (2 * mass) * std_apparatus.m + μ) * (std_apparatus.N)
-display(Energy)
+
 
 # adimensionalization
 velocity = 0.8 * width
+μ = interaction_g^2 / 8
+Energy = (velocity^2 / (2 * mass) * std_apparatus.m + μ) * (std_apparatus.N)
+display(Energy)
 velocity_coefficient = Energy / (hbar * velocity)
 display(velocity)
 display(velocity_coefficient)
@@ -94,7 +95,6 @@ std_apparatus = Apparatus(
 )
 
 # --------- InitialStates ---------   
-velocity = 1.5e6
 InitialState1 = InitialState(
   "sech", #type
   2.4e-6, # width
