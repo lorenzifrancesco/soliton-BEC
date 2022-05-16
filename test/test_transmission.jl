@@ -113,7 +113,7 @@ for (num, sim, app, pot, state) in configs
   potential_idx = Int64(floor((pot.position+num.S/2) / num.ds)
 
   T[cnt] = sum(abs.(ψ[potential_idx:length(space)]) .^ 2 * num.ds)
-  cnt += 1
+  cnt = cnt +  1
 
 end
 
