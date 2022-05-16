@@ -72,8 +72,6 @@ InitialState1 = InitialState(
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 1e-3 / 3, #width
-    L * 3 / 4, #position
     L * 1e-3 * 10, #width
     30e-6, #position
     energy, #energy
@@ -95,6 +93,7 @@ std_apparatus = Apparatus(
 )
 
 # --------- InitialStates ---------   
+velocity = 1.5e6
 InitialState1 = InitialState(
   "sech", #type
   2.4e-6, # width
