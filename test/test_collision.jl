@@ -36,8 +36,8 @@ std_apparatus = Apparatus(
 
 
 # --------- Numerics ---------
-T = 1 * time_unit
-L = 1 * space_unit
+T = 2 * time_unit
+L = 2 * space_unit
 print("\ntime_unit: ", time_unit)
 print("\nspace_unit: ", space_unit)
 num = Numerics(
@@ -47,7 +47,7 @@ num = Numerics(
   L * 1e-3, #ds
 )
 
-v0 = 1
+v0 = 1.5e6
 # --------- InitialStates ---------   
 InitialState1 = InitialState(
   "sech", #type
