@@ -1,15 +1,30 @@
-### TEST FOR THE GROUND STATE OF ELLIPTICAL WAVEGUIDE FOR DIFFERENT ECCENTRICITY
-## PLOTTING RESULTS IN NORMALIZED COORDINATES AS Salasnich - SciPost Physics (2022)
-
+### TEST FOR THE TRANSMISSION COEFFICIENT FOR DIFFERENT SOLITON VELOCITIES AND BARRIER STRENGTHS
+## PLOTTING RESULTS IN NORMALIZED COORDINATES AS GARDNER et al
 using SolitonBEC
 using Printf
 using Plots
 using Elliptic
+#using FileIO
 hbar = 6.62607015e-34 / (2 * pi)
 width = 1.42e-6
 mass = 6.941 * 1.660539e-27
 omega_perp = 2 * pi * 710
 l_perp = sqrt(hbar / (mass * omega_perp))
+N = 4e3
+as = -0.21e-9
+
+interaction_g = abs(2*hbar^2 * as / mass / l_perp^2)
+ggg = 2*hbar*omega_perp*abs(as)
+
+print("\ninteraction_g: ", interaction_g)
+
+# mass as total mass or mass per atom??
+time_unit = hbar^2/(mass * ggg * N)
+space_unit = hbar^3/(mass * ggg^2 * N^2)
+velocity_unit = ggg * N / hbar
+print("\n\ttime_unit: ", time_unit)
+print("\n\tspace_unit: ", space_unit)
+print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
@@ -20,52 +35,52 @@ khaykovich_gpe = Simulation(
 # --------- Apparata ---------
 std_apparatus = Apparatus(
   mass, #m (conversion AMU -> kg)
-  -0.21e-9, # as
+  as, # as
   omega_perp, # ω_perp
-  4e3, #N
+  N, #N
   1.77e-11, #γ
   2 * pi * 4,# ω_z
 )
 
-interaction_g = 2 * hbar^2 / mass * std_apparatus.as * (std_apparatus.N - 1) / width^2 # 2/width^2
-display(interaction_g)
-
 # Energy = 1 / 2 * (std_apparatus.as^2 / (width^2) + std_apparatus.as^2 / (2 * l_perp^2) + width^2 / std_apparatus.as^2 - interaction_g * std_apparatus.as^3 / (l_perp * width^2)) * hbar * omega_perp
+L = 2 * space_unit
 
-# adimensionalization
-velocity = 0.8 * width
-μ = interaction_g^2 / 8
-Energy = (velocity^2 / (2 * mass) * std_apparatus.m + μ) * (std_apparatus.N)
-display(Energy)
-velocity_coefficient = Energy / (hbar * velocity)
-display(velocity)
-display(velocity_coefficient)
+v0 = 1*velocity_unit
+x0 =-L/4
+# --------- InitialStates ---------   
+function initial_state_velocity(velocity::Float64)
+  init = InitialState1 = InitialState(
+    "sech", #type
+    width*1.8, # width
+    velocity, #v0
+    x0,
+  )
+  return init
+end
 
 # --------- Numerics ---------
-T = 10e-4
-L = 2 * velocity * T
+function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
+  if (velocity==0)
+    T = abs(x0)/ velocity_unit * 2
+  else
+    T = abs(x0)/ velocity * 2
+  end
+  num = Numerics(
+    T, #T
+    T * 1e-3, #dt
+    L, #S
+    L * 1e-3, #ds
+  )
+  return num
+end
 
-num = Numerics(
-  T, #T
-  T * 1e-3, #dt
-  L, #S
-  L * 1e-3, #ds
-)
-
-# --------- InitialStates ---------   
-display(width)
-InitialState1 = InitialState(
-  "sech", #type
-  width, # width
-  velocity_coefficient #v0
-)
 #--------- Potential ---------
 
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 1e-3 / 3, #width
-    L * 3 / 4, #position
+    L * 1e-3, #width
+    0, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -73,66 +88,77 @@ function barrier_height(energy::Float64)
   return r
 end
 
+energy_unit = mass * N^2 * ggg^2 / hbar^2
+print("\n\tenergy unit: ", energy_unit, " J")
+
+GSEnergy = energy_unit * (-N/24)
+#print("\nground state energy: ", GSEnergy/hbar, " hbar\n")
+phys_vel = 4.918e-3
+normd_vel = phys_vel*hbar/ggg/N
+Energy = GSEnergy + energy_unit * normd_vel^2*N/2
+#print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
+
+
 ## Configurations
 configs = []
+num_barr = 100
+barrier_list = LinRange(0, 1, num_barr)
+velocity_list = LinRange(0, 1, num_barr)
 
-for energy_vs_g in LinRange(-0.5, -1.5, 4)
-  energy = abs(interaction_g) * energy_vs_g
-  potential = barrier_height(energy)
-  push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
+for vel in velocity_list
+  for barrier_energy in barrier_list
+    potential = barrier_height(barrier_energy * energy_unit /500000)
+    state = initial_state_velocity(vel * velocity_unit)
+    numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
+    push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
+  end
 end
 
-#display(configs)
-mem_limit = 15000000000 #byt
-
+mem_limit = 15000000000 #byte
 pyplot()
 plt_width = 800
 plt_height = 600
-p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 
 ## Soliton - barrier collision --------------------------------------------
-@time run_dynamics(configs[1]...)
+#run_dynamics(configs[10]...)
 
-cnt = 1
-T = zeros(Float64, 1, length(configs))
 
-# num stays constant
-estimate = mem_estimate(num)
-if estimate < mem_limit
-  @printf("Estimated memory per simulation consumption: %4.1f MiB\n", estimate / (1024^2))
-else
-  @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
+
+T = zeros(Float64, length(velocity_list), length(barrier_list))
+
+for (iv, vel) in enumerate(velocity_list)
+  for (ib, barrier_energy) in enumerate(barrier_list)
+
+    (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
+
+    # potential space index
+    coeffs = get_coefficients(sim, app, pot, state)
+    time, space, ψ, ψ_spect = ssfm_solve(numerics, coeffs)
+    #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
+
+    T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics.ds)
+    print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
+    
+    #counter = sum(abs.(ψ[1:Int(floor(length(space)/2)), end]) .^ 2 * numerics.ds)
+    #print("\n\t Total integral: ", T[iv, ib]+counter)
+    # fig = plot(space, abs.(ψ[:, end]).^2, title="Transmission heatmap",
+    # xlabel="barrier",
+    # ylabel="velocity",
+    # reuse=false,
+    # size=(plt_width, plt_height))
+    # #plot!(abs.(ψ[Int(floor(length(space)/2)):end, end]))
+    # #plot!(space, abs.(coeffs.β.(space)))
+    # display(fig)
+  end
 end
 
-for (num, sim, app, pot, state) in configs
-  global cnt
-  @printf("\n------Running simulation # %3i \n", cnt)
-  # potential space index
-  coeffs = get_coefficients(sim, app, pot, state)
-  time, space, ψ, ψ_spect = @time ssfm_solve(num, coeffs)
-  potential_idx = Int64(floor((pot.position+num.S/2) / num.ds)
-
-  T[cnt] = sum(abs.(ψ[potential_idx:length(space)]) .^ 2 * num.ds)
-  cnt = cnt +  1
-
-end
-
-
-# plot!(space * 1e3,
-#   abs.(ψ[:, end]) .^ 2,
-#   label="energy = $(pot.energy)",
-#   lw=2,
-#   color=p[cnt])
-
-fig1 = plot(title="|ψ|^2 after collision with barrier",
-  xlabel="space [mm]",
-  ylabel="|ψ|^2",
+fig1 = plot(title="Transmission heatmap",
+  xlabel="barrier",
+  ylabel="velocity",
   reuse=false,
   size=(plt_width, plt_height))
-plot!(1:cnt,
-  T,
-  lw=1,
-  ls=:dot,
-  label=nothing,
-  color=p[cnt])
+heatmap!(T)
 display(fig1)
+
+#  @save "T40.jld2" T
+#save("T100.jld2", T)
