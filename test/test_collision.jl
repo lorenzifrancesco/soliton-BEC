@@ -37,27 +37,29 @@ std_apparatus = Apparatus(
 )
 
 # Energy = 1 / 2 * (std_apparatus.as^2 / (width^2) + std_apparatus.as^2 / (2 * l_perp^2) + width^2 / std_apparatus.as^2 - interaction_g * std_apparatus.as^3 / (l_perp * width^2)) * hbar * omega_perp
+L = 2 * space_unit
 
+velocity_unit = ggg*N/hbar
+print("\n\tvelocity unit: ", velocity_unit, " m/s")
+v0 = 1*velocity_unit
+x0 =-L/4
+# --------- InitialStates ---------   
+InitialState1 = InitialState(
+  "sech", #type
+  width*1.8, # width
+  v0, #v0
+  x0,
+)
 
 # --------- Numerics ---------
-T = 1e4 * time_unit
-L = 2 * space_unit
-print("\ntime_unit: ", time_unit)
-print("\nspace_unit: ", space_unit)
+T = abs(InitialState1.x0)/ v0 * 2
+print("\n\ttime_unit: ", time_unit)
+print("\n\tspace_unit: ", space_unit)
 num = Numerics(
   T, #T
   T * 1e-3, #dt
   L, #S
   L * 1e-3, #ds
-)
-
-v0 = 1e-2
-print("v0: ", v0)
-# --------- InitialStates ---------   
-InitialState1 = InitialState(
-  "sech", #type
-  width*1.8, # width
-  v0 #v0
 )
 
 #--------- Potential ---------
@@ -66,7 +68,7 @@ function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
     L * 1e-4, #width
-    100e-6, #position
+    0, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -75,20 +77,21 @@ function barrier_height(energy::Float64)
 end
 
 energy_unit = mass * N^2 * ggg^2 / hbar^2
+print("\n\tenergy unit: ", energy_unit, " J")
+print("\n==> desired group velocity: ", v0, " m/s\n\n")
+
 GSEnergy = energy_unit * (-N/24)
-print("\nground state energy: ", GSEnergy/hbar, " hbar\n")
+#print("\nground state energy: ", GSEnergy/hbar, " hbar\n")
 phys_vel = 4.918e-3
 normd_vel = phys_vel*hbar/ggg/N
 Energy = GSEnergy + energy_unit * normd_vel^2*N/2
-print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
+#print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
 
- print("\n==> desired group velocity: ", v0, " m/s\n\n")
 
 ## Configurations
 configs = []
-for energy in LinRange(0, 2, 3)
-  energy= 0
-  potential = barrier_height(energy * Energy)
+for barrier_energy in LinRange(0, 1, 3)
+  potential = barrier_height(barrier_energy * energy_unit)
   push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
 end
 
@@ -101,14 +104,14 @@ p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 ## Soliton - barrier collision --------------------------------------------
 run_dynamics(configs[2]...)
 
-# fig1 = plot(title="|ψ|^2 after collision with barrier",
-#   xlabel="space [mm]",
-#   ylabel="|ψ|^2",
-#   reuse=false,
-#   size=(800, 400),
-#   legend=:topleft)
+fig1 = plot(title="|ψ|^2 after collision with barrier",
+  xlabel="space [mm]",
+  ylabel="|ψ|^2",
+  reuse=false,
+  size=(800, 400),
+  legend=:topleft)
 
-for (num, sim, app, pot, state) in [configs[2]]
+for (num, sim, app, pot, state) in configs
 
   global cnt
   @printf("\n------Running simulation # %3i \n", cnt)
@@ -126,16 +129,16 @@ for (num, sim, app, pot, state) in [configs[2]]
     # plot!(space*1e3, abs.(ψ[:, end]).^2)
 
     print("peak: ", peak)
-    group_velocity = space[idx]/time[length(time)]
+    group_velocity = (space[idx]-state.x0)/time[length(time)]
     print("\n==> measured group velocity: ", group_velocity, " m/s\n")
 
-    print("\n ratio group velocity: ", group_vel/group_velocity, "\n")
+    print("\n ratio group velocity: ", state.v0/group_velocity, "\n")
 
-    # plot!(space * 1e3,
-    #   abs.(ψ[:, end]) .^ 2,
-    #   label="peak potential = $(pot.energy / (sqrt(2 * pi) * pot.width) /1.602176634e-19)   [eV]",
-    #   lw=1,
-    #   color=p[cnt])
+    plot!(space * 1e3,
+      abs.(ψ[:, end]) .^ 2,
+      label="peak potential = $(pot.energy / (sqrt(2 * pi) * pot.width) /1.602176634e-19)   [eV]",
+      lw=1,
+      color=p[cnt])
 
     # plot!(space * 1e3,
     #   abs.(map(s -> potential(sim, app, pot, s), space)) / hbar,
@@ -143,12 +146,12 @@ for (num, sim, app, pot, state) in [configs[2]]
     #   ls=:dot,
     #   label=nothing,
     #   color=p[cnt])
-    # display(space)
-  else
+
+    else
     @printf("Estimated memory consumption (%4.1f MiB) exceed maximum!\n", estimate / (1024^2))
   end
 
   cnt += 1
 
 end
-#display(fig1)
+display(fig1)
