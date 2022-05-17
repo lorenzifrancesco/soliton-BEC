@@ -5,9 +5,9 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   time = LinRange(0, num.T, time_steps)
   space = LinRange(-num.S / 2, num.S / 2, space_steps)
 
-  print("Simulation diagnostics:\n")
-  @printf("Time  : from %6.3i ms, to  %6.3i ms; %6d steps \n", time[1] * 1e3, time[time_steps] * 1e3, time_steps)
-  @printf("Space : from %6.3f mm, to  %6.3f mm; %6d steps \n", space[1] * 1e3, space[space_steps] * 1e3, space_steps)
+  # print("Simulation diagnostics:\n")
+  # @printf("Time  : from %6.3i ms, to  %6.3i ms; %6d steps \n", time[1] * 1e3, time[time_steps] * 1e3, time_steps)
+  # @printf("Space : from %6.3f mm, to  %6.3f mm; %6d steps \n", space[1] * 1e3, space[space_steps] * 1e3, space_steps)
 
   # Spatial frequency range computation
   k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
@@ -37,7 +37,8 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   fwd_curvature = exp.(num.dt / 2 .* coeffs.β.(space))
   # display("Gamma at peak")
   # display(coeffs.γ.(ψ[Int(floor(space_steps/2)),1]))
-  @showprogress "Propagating the field... " for n = 1:time_steps-1
+  #@showprogress "Propagating the field... " 
+  for n = 1:time_steps-1
     # if 1+2*app.as*(app.N - 1) * abs.(ψ[Int(floor(space_steps/2)), n])^2 > 1
     #   display("Collapse detected")
     #   return
@@ -59,9 +60,9 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
   time = LinRange(0, num.T, time_steps)
   space = LinRange(-num.S / 2, num.S / 2, space_steps)
 
-  print("Simulation diagnostics:\n")
-  @printf("Time  : from %6.3i ms, to  %6.3i ms; %6d steps \n", time[1] * 1e3, time[time_steps] * 1e3, time_steps)
-  @printf("Space : from %6.3f mm, to  %6.3f mm; %6d steps \n", space[1] * 1e3, space[space_steps] * 1e3, space_steps)
+  # print("Simulation diagnostics:\n")
+  # @printf("Time  : from %6.3i ms, to  %6.3i ms; %6d steps \n", time[1] * 1e3, time[time_steps] * 1e3, time_steps)
+  # @printf("Space : from %6.3f mm, to  %6.3f mm; %6d steps \n", space[1] * 1e3, space[space_steps] * 1e3, space_steps)
 
   # Spatial frequency range computation
   k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
