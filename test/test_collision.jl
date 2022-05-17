@@ -9,12 +9,16 @@ omega_perp = 2 * pi * 710
 l_perp = sqrt(hbar / (mass * omega_perp))
 N = 4e3
 as = -0.21e-9
-interaction_g = 2 * hbar * omega_perp * abs(as)
+
+interaction_g = abs(2*hbar^2 * as / mass / l_perp^2)
+ggg = 2*hbar*omega_perp*abs(as)
+
+print("\ninteraction_g: ", interaction_g)
 
 # mass as total mass or mass per atom??
-time_unit = hbar^2/(mass * interaction_g * N)
-space_unit = hbar^3/(mass * interaction_g^2 * N^2)
-velocity_unit = interaction_g * N / hbar
+time_unit = hbar^2/(mass * ggg * N)
+space_unit = hbar^3/(mass * ggg^2 * N^2)
+velocity_unit = ggg * N / hbar
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
@@ -36,7 +40,7 @@ std_apparatus = Apparatus(
 
 
 # --------- Numerics ---------
-T = 2 * time_unit
+T = 1e4 * time_unit
 L = 2 * space_unit
 print("\ntime_unit: ", time_unit)
 print("\nspace_unit: ", space_unit)
@@ -47,11 +51,12 @@ num = Numerics(
   L * 1e-3, #ds
 )
 
-v0 = 1.5e6
+v0 = 1e-2
+print("v0: ", v0)
 # --------- InitialStates ---------   
 InitialState1 = InitialState(
   "sech", #type
-  width, # width
+  width*1.8, # width
   v0 #v0
 )
 
@@ -60,8 +65,8 @@ InitialState1 = InitialState(
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 1e-3 * 10, #width
-    30e-6, #position
+    L * 1e-4, #width
+    100e-6, #position
     energy, #energy
     0, #ϵ
     10e-6 #a
@@ -69,11 +74,21 @@ function barrier_height(energy::Float64)
   return r
 end
 
+energy_unit = mass * N^2 * ggg^2 / hbar^2
+GSEnergy = energy_unit * (-N/24)
+print("\nground state energy: ", GSEnergy/hbar, " hbar\n")
+phys_vel = 4.918e-3
+normd_vel = phys_vel*hbar/ggg/N
+Energy = GSEnergy + energy_unit * normd_vel^2*N/2
+print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
+
+ print("\n==> desired group velocity: ", v0, " m/s\n\n")
 
 ## Configurations
 configs = []
-for energy in LinRange(1e-37, 100e-37, 2)
-  potential = barrier_height(energy)
+for energy in LinRange(0, 2, 3)
+  energy= 0
+  potential = barrier_height(energy * Energy)
   push!(configs, (num, khaykovich_gpe, std_apparatus, potential, InitialState1))
 end
 
@@ -84,27 +99,38 @@ pyplot()
 p = Plots.palette(:rainbow_bgyr_35_85_c72_n256, length(configs) + 3)
 
 ## Soliton - barrier collision --------------------------------------------
-@time run_dynamics(configs[1]...)
+run_dynamics(configs[2]...)
 
-fig1 = plot(title="|ψ|^2 after collision with barrier",
-  xlabel="space [mm]",
-  ylabel="|ψ|^2",
-  reuse=false,
-  size=(800, 400),
-  legend=:topleft)
+# fig1 = plot(title="|ψ|^2 after collision with barrier",
+#   xlabel="space [mm]",
+#   ylabel="|ψ|^2",
+#   reuse=false,
+#   size=(800, 400),
+#   legend=:topleft)
 
-for (num, sim, app, pot, state) in configs
+for (num, sim, app, pot, state) in [configs[2]]
 
   global cnt
   @printf("\n------Running simulation # %3i \n", cnt)
   estimate = mem_estimate(num)
 
   if estimate < mem_limit
-    @printf("Estimated memory consumption: %4.1f MiB\n", estimate / (1024^2))
+    #@printf("Estimated memory consumption: %4.1f MiB\n", estimate / (1024^2))
 
     coeffs = get_coefficients(sim, app, pot, state)
 
     time, space, ψ, ψ_spect = @time ssfm_solve(num, coeffs)
+    #plot_dynamics(time, space, ψ, ψ_spect)
+    peak, idx = findmax(abs.(ψ[:, end]).^2)
+
+    # plot!(space*1e3, abs.(ψ[:, end]).^2)
+
+    print("peak: ", peak)
+    group_velocity = space[idx]/time[length(time)]
+    print("\n==> measured group velocity: ", group_velocity, " m/s\n")
+
+    print("\n ratio group velocity: ", group_vel/group_velocity, "\n")
+
     # plot!(space * 1e3,
     #   abs.(ψ[:, end]) .^ 2,
     #   label="peak potential = $(pot.energy / (sqrt(2 * pi) * pot.width) /1.602176634e-19)   [eV]",
@@ -125,3 +151,4 @@ for (num, sim, app, pot, state) in configs
   cnt += 1
 
 end
+#display(fig1)

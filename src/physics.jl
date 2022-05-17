@@ -105,14 +105,15 @@ function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
     interaction_g = abs(2*hbar^2 * app.as / app.m / l_perp^2)
-    print("\ninteraction_g: ", interaction_g)
-    Energy = state.v0^2 * app.m / 2 + interaction_g * app.N * state.width
-    # vel_coefficient makes sense for soliton
-    vel_coeff = Energy/hbar/state.v0
+    ggg = 2*hbar*app.ω_perp*abs(app.as)
+    GSEnergy = -app.N^3/24*ggg^2 * app.m/hbar^2 
+    Energy = GSEnergy
+    k0 = app.m/hbar * state.v0
+
     if state.type == "gaussian" # Gaussian Pulse
-        return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * vel_coeff)
+        return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * k0)
     elseif state.type == "sech"
-        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width))) * exp(im * s * vel_coeff)
+        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width))) * exp(im * s * k0)
     end
 end
 
