@@ -33,6 +33,7 @@ struct InitialState
     type::String
     width::Float64
     v0::Float64
+    x0::Float64
 end
 
 struct Coefficients
@@ -108,12 +109,12 @@ function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
     ggg = 2*hbar*app.ω_perp*abs(app.as)
     GSEnergy = -app.N^3/24*ggg^2 * app.m/hbar^2 
     Energy = GSEnergy
-    k0 = app.m/hbar * state.v0
+    k0 = app.m/hbar * state.v0 * 2
 
     if state.type == "gaussian" # Gaussian Pulse
-        return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s) .^ 2 / (4 * state.width^2)) * exp(im * s * k0)
+        return sqrt(1 / (sqrt(2 * pi) * state.width)) * exp.(-(s-state.x0) .^ 2 / (4 * state.width^2)) * exp(im * (s-state.x0) * k0)
     elseif state.type == "sech"
-        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-(s / (state.width))) .+ exp.(s / (state.width))) * exp(im * s * k0)
+        return sqrt(1 / (2 * state.width)) * 2 ./ (exp.(-((s-state.x0) / (state.width))) .+ exp.((s-state.x0) / (state.width))) * exp(im * (s-state.x0) * k0)
     end
 end
 
