@@ -4,6 +4,7 @@ using SolitonBEC
 using Printf
 using Plots
 using Elliptic
+using Distributed
 #using FileIO
 hbar = 6.62607015e-34 / (2 * pi)
 width = 1.42e-6
@@ -28,17 +29,18 @@ print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
-  "GPE",
+  "NPSE",
   "barrier",
 )
 
+γ = 0 * 1.77e-11
 # --------- Apparata ---------
 std_apparatus = Apparatus(
   mass, #m (conversion AMU -> kg)
   as, # as
   omega_perp, # ω_perp
   N, #N
-  1.77e-11, #γ
+  γ, #γ
   2 * pi * 4,# ω_z
 )
 
@@ -99,15 +101,15 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 #print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
 
 
-## Configurations
+## ==================== Transmission grid configuration
 configs = []
-num_barr = 100
+num_barr = 30
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
 for vel in velocity_list
   for barrier_energy in barrier_list
-    potential = barrier_height(barrier_energy * energy_unit /500000)
+    potential = barrier_height(- barrier_energy * energy_unit /500000)
     state = initial_state_velocity(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
     push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
@@ -120,14 +122,17 @@ plt_width = 800
 plt_height = 600
 
 ## Soliton - barrier collision --------------------------------------------
-#run_dynamics(configs[10]...)
-
+#run_dynamics(configs[23]...)
 
 
 T = zeros(Float64, length(velocity_list), length(barrier_list))
 
-for (iv, vel) in enumerate(velocity_list)
-  for (ib, barrier_energy) in enumerate(barrier_list)
+nth = Threads.nthreads() #print number of threads
+print("number of threads: ", nth)
+
+Threads.@threads for iv in axes(velocity_list, 1)
+  
+    for (ib, barrier_energy) in enumerate(barrier_list)
 
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
 
@@ -159,6 +164,6 @@ fig1 = plot(title="Transmission heatmap",
   size=(plt_width, plt_height))
 heatmap!(T)
 display(fig1)
-
+savefig("T30_NPSE.pdf")
 #  @save "T40.jld2" T
 #save("T100.jld2", T)

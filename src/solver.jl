@@ -134,18 +134,18 @@ function plot_dynamics(time, space, ψ, ψ_spect)
   #   reuse=false,
   #   size=(800, 600))
 
-  # fig3 = plot(space * 1e3,
-  #   abs.(ψ[:, end]) .^ 2,
-  #   title="evolved |ψ|^2",
-  #   xlabel="space [mm]",
-  #   reuse=false,
-  #   label="t=t_max")
-  # plot!(space * 1e3,
-  #   abs.(ψ[:, 1]) .^ 2,
-  #   show=true,
-  #   reuse=false,
-  #   label="t=0",
-  #   size=(800, 600))
+  fig3 = plot(space * 1e3,
+    abs.(ψ[:, end]) .^ 2,
+    title="evolved |ψ|^2",
+    xlabel="space [mm]",
+    reuse=false,
+    label="t=t_max")
+  plot!(space * 1e3,
+    abs.(ψ[:, 1]) .^ 2,
+    show=true,
+    reuse=false,
+    label="t=0",
+    size=(800, 600))
 end
 
 

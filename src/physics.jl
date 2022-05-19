@@ -94,7 +94,12 @@ function γ(sim::Simulation, app::Apparatus, state::InitialState, ψ::ComplexF64
     npse_gamma = app.γ * hbar * app.ω_perp / l_z^6 * 1e-4
     σ(ψ::ComplexF64) = l_perp * sqrt(sqrt(1 + 2 * app.as * (app.N - 1) * abs.(ψ)^2))
     if sim.equation == "NPSE"
-        value = -im * hbar / (2 * app.m * σ(ψ)^2) - im * app.m * app.ω_perp^2 / (2 * hbar) * σ(ψ)^2 - im * 2 * hbar * app.as * (app.N - 1) / (app.m * σ(ψ)^2) * abs.(ψ)^2 - npse_gamma * app.N^2 * abs.(ψ)^4
+        if 1 + 2 * app.as * (app.N - 1) * abs.(ψ)^2 >= 0
+            value = -im * hbar / (2 * app.m * σ(ψ)^2) - im * app.m * app.ω_perp^2 / (2 * hbar) * σ(ψ)^2 - im * 2 * hbar * app.as * (app.N - 1) / (app.m * σ(ψ)^2) * abs.(ψ)^2 - npse_gamma * app.N^2 * abs.(ψ)^4
+        else
+            #print("\nCollapse detected!")
+            return NaN
+        end
     elseif sim.equation == "GPE"
         value = -im * 2 * hbar * app.as * (app.N - 1) / (app.m * l_perp^2) * abs.(ψ)^2
     end
