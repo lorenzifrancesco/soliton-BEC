@@ -13,4 +13,4 @@ cd $WORKING_DIR
 #your working directory
 cd soliton-BEC
 
-srun singularity exec bec.sif julia --threads=auto test/test_transmission.jl
+srun singularity exec bec.sif julia --threads=auto startup.jl
