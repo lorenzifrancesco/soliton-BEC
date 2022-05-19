@@ -10,4 +10,4 @@ From: julia:1.7.2
     git checkout transmission-exploration
         
 %runscript
-    julia --version
+    julia --threads=auto startup.jl
