@@ -69,9 +69,9 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 1e-3, #dt
+    T * 2e-4, #dt
     L, #S
-    L * 1e-3, #ds
+    L * 2e-4, #ds
   )
   return num
 end
@@ -103,13 +103,13 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 30
+num_barr = 200
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
 for vel in velocity_list
   for barrier_energy in barrier_list
-    potential = barrier_height(- barrier_energy * energy_unit /500000)
+    potential = barrier_height(barrier_energy * energy_unit /500000)
     state = initial_state_velocity(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
     push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
@@ -122,7 +122,7 @@ plt_width = 800
 plt_height = 600
 
 ## Soliton - barrier collision --------------------------------------------
-#run_dynamics(configs[23]...)
+#run_dynamics(configs[20*20 - 5]...)
 
 
 T = zeros(Float64, length(velocity_list), length(barrier_list))
@@ -164,6 +164,8 @@ fig1 = plot(title="Transmission heatmap",
   size=(plt_width, plt_height))
 heatmap!(T)
 display(fig1)
-savefig("T30_NPSE.pdf")
+savefig("T200.pdf")
+savefig("T200-raster.png")
+
 #  @save "T40.jld2" T
 #save("T100.jld2", T)
