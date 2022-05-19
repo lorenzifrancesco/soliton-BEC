@@ -1,19 +1,2 @@
 using Pkg
-pkg"add Distributed"
-pkg"add Elliptic"
-pkg"add FFTW"
-pkg"add FileIO"
-pkg"add PhysicalConstants"
-pkg"add PlotlyBase"
-pkg"add PyPlot"
-pkg"add Plots"
-pkg"add Printf"
-pkg"add ProgressMeter"
-pkg"add QuadGK"
-pkg"add LinearAlgebra"
-pkg"add Random"
-pkg"add SparseArrays"
-pkg"add Test"
-pkg"precompile"
-include("./src/SolitonBEC.jl")
-
+Pkg.add(url="https://github.com/lorenzifrancesco/soliton-BEC/tree/transmission-exploration")
