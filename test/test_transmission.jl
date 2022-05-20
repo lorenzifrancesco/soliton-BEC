@@ -68,9 +68,9 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 2e-4, #dt
+    T * 1e-3, #dt
     L, #S
-    L * 2e-4, #ds
+    L * 1e-3, #ds
   )
   return num
 end
@@ -102,7 +102,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 200
+num_barr = 400
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
