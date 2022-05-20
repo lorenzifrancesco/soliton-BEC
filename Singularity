@@ -7,4 +7,4 @@ From: julia:1.7.2
     apt install git -y
         
 %runscript
-    julia --threads=auto startup.jl
+    julia --threads=auto install.jl
