@@ -138,23 +138,3 @@ function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state
     initial_state(s::Float64) = wave(sim::Simulation, app::Apparatus, state::InitialState, s)
     return Coefficients(α, beta, gamma, initial_state)
 end
-
-
-function run_ground_state(num::Numerics, sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
-
-    coeffs = get_coefficients(sim, app, pot, state)
-
-    display("Running ground-state simulation")
-    results = ground_state_solve(num, coeffs)
-    plot_ground_state(results...)
-end
-
-
-function run_dynamics(num::Numerics, sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
-
-    coeffs = get_coefficients(sim, app, pot, state)
-
-    display("Running Dynamic simulation")
-    results = ssfm_solve(num, coeffs)
-    plot_dynamics(results...)
-end

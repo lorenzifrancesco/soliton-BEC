@@ -2,7 +2,6 @@
 ## PLOTTING RESULTS IN NORMALIZED COORDINATES AS GARDNER et al
 using SolitonBEC
 using Printf
-using Plots
 using Elliptic
 using Distributed
 #using FileIO
@@ -117,9 +116,6 @@ for vel in velocity_list
 end
 
 mem_limit = 15000000000 #byte
-pyplot()
-plt_width = 800
-plt_height = 600
 
 ## Soliton - barrier collision --------------------------------------------
 #run_dynamics(configs[20*20 - 5]...)
@@ -143,29 +139,7 @@ Threads.@threads for iv in axes(velocity_list, 1)
 
     T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics.ds)
     print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
-    
-    #counter = sum(abs.(ψ[1:Int(floor(length(space)/2)), end]) .^ 2 * numerics.ds)
-    #print("\n\t Total integral: ", T[iv, ib]+counter)
-    # fig = plot(space, abs.(ψ[:, end]).^2, title="Transmission heatmap",
-    # xlabel="barrier",
-    # ylabel="velocity",
-    # reuse=false,
-    # size=(plt_width, plt_height))
-    # #plot!(abs.(ψ[Int(floor(length(space)/2)):end, end]))
-    # #plot!(space, abs.(coeffs.β.(space)))
-    # display(fig)
   end
 end
 
-fig1 = plot(title="Transmission heatmap",
-  xlabel="barrier",
-  ylabel="velocity",
-  reuse=false,
-  size=(plt_width, plt_height))
-heatmap!(T)
-display(fig1)
-savefig("T200.pdf")
-savefig("T200-raster.png")
-
-#  @save "T40.jld2" T
-#save("T100.jld2", T)
+write("T.bin", T)
