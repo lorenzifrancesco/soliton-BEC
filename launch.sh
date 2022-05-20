@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=BECdyn1.0
-#SBATCH --error=BECdyn1.%j.err
-#SBATCH --output=BECdyn1.%j.out
+#SBATCH --job-name=BECdyn2.0
+#SBATCH --error=BECdyn2.err
+#SBATCH --output=BECdyn2.out
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=64
