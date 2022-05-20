@@ -53,6 +53,37 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   return time, space, ψ, ψ_spect
 end
 
+function ssfm_propagate(num::Numerics, coeffs::Coefficients)
+  time_steps = Int(floor(num.T / num.dt))
+  space_steps = Int(floor(num.S / num.ds))
+  time = LinRange(0, num.T, time_steps)
+  space = LinRange(-num.S / 2, num.S / 2, space_steps)
+
+  # Spatial frequency range computation
+  k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
+  k = fftshift(k)
+  ψ = zeros(ComplexF64, space_steps)
+  ψ_spect = zeros(ComplexF64, space_steps)
+
+  waveform = coeffs.initial.(space)
+
+  ## [SPACE INDEX, TIME INDEX]
+  ψ = waveform
+
+  fwd_disp = exp.(num.dt / 2 .* coeffs.α * k .^ 2)
+  fwd_curvature = exp.(num.dt / 2 .* coeffs.β.(space))
+
+  for n = 1:time_steps-1
+
+    ψ_spect = fft(ψ)
+    ψ_spect = ψ_spect .* fwd_disp
+    ψ = ifft(ψ_spect)
+    ψ= ψ .* exp.(num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
+  end
+  ψ_spect = fft(ψ)
+
+  return time, space, ψ, ψ_spect
+end
 
 function ground_state_solve(num::Numerics, coeffs::Coefficients)
   time_steps = Int(floor(num.T / num.dt))
