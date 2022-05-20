@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=BECdyn2.0
+#SBATCH --job-name=BEC3.0
 #SBATCH --error=BECdyn2.err
 #SBATCH --output=BECdyn2.out
 #SBATCH --partition=allgroups

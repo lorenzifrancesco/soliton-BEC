@@ -70,9 +70,9 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 1e-3, #dt
+    T * 2e-4, #dt
     L, #S
-    L * 1e-3, #ds
+    L * 2e-4, #ds
   )
   return num
 end
@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 10
+num_barr = 400
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -126,10 +126,10 @@ mem_limit = 15000000000 #byte
 T = zeros(Float64, length(velocity_list), length(barrier_list))
 
 nth = Threads.nthreads() #print number of threads
-print("number of threads: ", nth)
+print("\nNumber of threads: ", nth, "\n")
 
 Threads.@threads for iv in axes(velocity_list, 1)
-  
+    print("\nComputing velocity", iv)
     for (ib, barrier_energy) in enumerate(barrier_list)
 
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
@@ -140,7 +140,6 @@ Threads.@threads for iv in axes(velocity_list, 1)
     #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
 
     T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds)
-    print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
   end
 end
 
