@@ -129,8 +129,9 @@ nth = Threads.nthreads() #print number of threads
 print("\nNumber of threads: ", nth, "\n")
 
 Threads.@threads for iv in axes(velocity_list, 1)
-    print("\nComputing velocity", iv)
+    print("\nComputing vel. ", iv)
     for (ib, barrier_energy) in enumerate(barrier_list)
+      print("\n\t computing barr. ", ib, " in vel. ", iv)
 
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
 
