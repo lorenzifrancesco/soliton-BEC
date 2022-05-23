@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 200
+num_barr = 3
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -128,13 +128,14 @@ T = zeros(Float64, length(velocity_list), length(barrier_list))
 nth = Threads.nthreads() #print number of threads
 print("\nNumber of threads: ", nth, "\n")
 
-Threads.@threads for iv in axes(velocity_list, 1)
-    print("\nComputing vel. ", iv)
-    for (ib, barrier_energy) in enumerate(barrier_list)
-      print("\n\t computing barr. ", ib, " in vel. ", iv)
+
+for iv in axes(velocity_list, 1)
+  print("\nComputing vel. ", iv)
+  Threads.@threads for ib in axes(barrier_list, 1)
+    print("\n\t computing barr. ", ib, " in vel. ", iv)
 
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
-
+    
     # potential space index
     coeffs = get_coefficients(sim, app, pot, state)
     time, space, ψ, ψ_spect = ssfm_propagate(numerics, coeffs)
