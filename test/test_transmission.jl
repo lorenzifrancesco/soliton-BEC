@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 400
+num_barr = 200
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
