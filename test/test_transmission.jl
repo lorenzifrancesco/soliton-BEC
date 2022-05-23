@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 3
+num_barr = 360
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -130,9 +130,9 @@ print("\nNumber of threads: ", nth, "\n")
 
 
 for iv in axes(velocity_list, 1)
-  print("\nComputing vel. ", iv)
+  print("\nVel. ", iv)
   Threads.@threads for ib in axes(barrier_list, 1)
-    print("\n\t computing barr. ", ib, " in vel. ", iv)
+    print("\n\t Barr. ", ib, " in vel. ", iv)
 
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
     
