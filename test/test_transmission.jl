@@ -29,6 +29,11 @@ print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
+  "GPE",
+  "barrier",
+)
+# --------- Simulation ---------
+khaykovich_npse = Simulation(
   "NPSE",
   "barrier",
 )
@@ -68,10 +73,10 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     T = abs(x0)/ velocity * 2
   end
   num = Numerics(
-    T, #T
-    T * 2e-4, #dt
+    T, #
+    T * 1e-3, #dt
     L, #S
-    L * 2e-4, #ds
+    L * 1e-3, #ds
   )
   return num
 end
@@ -102,8 +107,9 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 
 ## ==================== Transmission grid configuration
-configs = []
-num_barr = 200
+configs_GPE = []
+configs_NPSE = []
+num_barr = 20
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -112,7 +118,9 @@ for vel in velocity_list
     potential = barrier_height(barrier_energy * energy_unit /500000)
     state = initial_state_velocity(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
-    push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
+    push!(configs_GPE, (numerics, khaykovich_gpe, std_apparatus, potential, state))
+    push!(configs_NPSE, (numerics, khaykovich_npse, std_apparatus, potential, state))
+
   end
 end
 
@@ -125,47 +133,57 @@ plt_height = 600
 #run_dynamics(configs[20*20 - 5]...)
 
 
-T = zeros(Float64, length(velocity_list), length(barrier_list))
+Tg = zeros(Float64, length(velocity_list), length(barrier_list))
+Tn = zeros(Float64, length(velocity_list), length(barrier_list))
 
 nth = Threads.nthreads() #print number of threads
-print("number of threads: ", nth)
+print("\n--number of threads: ", nth)
 
-Threads.@threads for iv in axes(velocity_list, 1)
+ for iv in axes(velocity_list, 1)
   
-    for (ib, barrier_energy) in enumerate(barrier_list)
+  Threads.@threads for ib in [iv]
 
-    (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
+    (numerics_g, sim_g, app_g, pot_g, state_g) = configs_GPE[(iv-1) * num_barr + ib]
+    (numerics_n, sim_n, app_n, pot_n, state_n) = configs_NPSE[(iv-1) * num_barr + ib]
 
     # potential space index
-    coeffs = get_coefficients(sim, app, pot, state)
-    time, space, ψ, ψ_spect = ssfm_solve(numerics, coeffs)
-    #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
+    coeffs_g = get_coefficients(sim_g, app_g, pot_g, state_g)
+    coeffs_n = get_coefficients(sim_n, app_n, pot_n, state_n)
 
-    T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics.ds)
-    print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
+    time, space, ψg, ψ_spectg = ssfm_solve(numerics_g, coeffs_g)
+    time, space, ψn, ψ_spectn = ssfm_solve(numerics_n, coeffs_n)
+
+    Tg[iv, ib] = sum(abs.(ψg[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_g.ds)
+    Tn[iv, ib] = sum(abs.(ψn[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_n.ds)
+
+    print("\nTg[", iv, ", ", ib ,"] = ", Tg[iv, ib], "<--> Tn[", iv, ", ", ib ,"] = ", Tn[iv, ib])
     
     #counter = sum(abs.(ψ[1:Int(floor(length(space)/2)), end]) .^ 2 * numerics.ds)
     #print("\n\t Total integral: ", T[iv, ib]+counter)
-    # fig = plot(space, abs.(ψ[:, end]).^2, title="Transmission heatmap",
-    # xlabel="barrier",
-    # ylabel="velocity",
-    # reuse=false,
-    # size=(plt_width, plt_height))
-    # #plot!(abs.(ψ[Int(floor(length(space)/2)):end, end]))
-    # #plot!(space, abs.(coeffs.β.(space)))
-    # display(fig)
+    fig = plot(space, abs.(ψg[:, end]).^2,
+    xlabel="barrier",
+    ylabel="velocity",
+    reuse=false,
+    label = "GPE",
+    size=(plt_width, plt_height))
+
+    plot!(space, abs.(ψn[:, end]).^2,
+    label = "NPSE")
+    #plot!(abs.(ψ[Int(floor(length(space)/2)):end, end]))
+    #plot!(space, abs.(coeffs.β.(space)))
+    display(fig)
   end
 end
 
-fig1 = plot(title="Transmission heatmap",
-  xlabel="barrier",
-  ylabel="velocity",
-  reuse=false,
-  size=(plt_width, plt_height))
-heatmap!(T)
-display(fig1)
-savefig("T200.pdf")
-savefig("T200-raster.png")
+# fig1 = plot(title="Transmission heatmap",
+#   xlabel="barrier",
+#   ylabel="velocity",
+#   reuse=false,
+#   size=(plt_width, plt_height))
+# heatmap!(T)
+# display(fig1)
+# savefig("T200.pdf")
+# savefig("T200-raster.png")
 
 #  @save "T40.jld2" T
 #save("T100.jld2", T)
