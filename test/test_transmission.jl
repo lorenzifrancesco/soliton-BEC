@@ -109,7 +109,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 ## ==================== Transmission grid configuration
 configs_GPE = []
 configs_NPSE = []
-num_barr = 20
+num_barr = 5
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -141,7 +141,7 @@ print("\n--number of threads: ", nth)
 
  for iv in axes(velocity_list, 1)
   
-  Threads.@threads for ib in [iv]
+  Threads.@threads for ib in axes(barrier_list, 1)
 
     (numerics_g, sim_g, app_g, pot_g, state_g) = configs_GPE[(iv-1) * num_barr + ib]
     (numerics_n, sim_n, app_n, pot_n, state_n) = configs_NPSE[(iv-1) * num_barr + ib]
