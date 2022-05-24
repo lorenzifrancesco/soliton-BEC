@@ -135,6 +135,7 @@ plt_height = 600
 
 Tg = zeros(Float64, length(velocity_list), length(barrier_list))
 Tn = zeros(Float64, length(velocity_list), length(barrier_list))
+ΔT = zeros(Float64, length(velocity_list), length(barrier_list))
 
 nth = Threads.nthreads() #print number of threads
 print("\n--number of threads: ", nth)
@@ -155,23 +156,8 @@ print("\n--number of threads: ", nth)
 
     Tg[iv, ib] = sum(abs.(ψg[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_g.ds)
     Tn[iv, ib] = sum(abs.(ψn[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_n.ds)
-
+    ΔT[iv, ib] = Tg[iv, ib] - Tn[iv, ib]
     print("\nTg[", iv, ", ", ib ,"] = ", Tg[iv, ib], "<--> Tn[", iv, ", ", ib ,"] = ", Tn[iv, ib])
-    
-    #counter = sum(abs.(ψ[1:Int(floor(length(space)/2)), end]) .^ 2 * numerics.ds)
-    #print("\n\t Total integral: ", T[iv, ib]+counter)
-    fig = plot(space, abs.(ψg[:, end]).^2,
-    xlabel="barrier",
-    ylabel="velocity",
-    reuse=false,
-    label = "GPE",
-    size=(plt_width, plt_height))
-
-    plot!(space, abs.(ψn[:, end]).^2,
-    label = "NPSE")
-    #plot!(abs.(ψ[Int(floor(length(space)/2)):end, end]))
-    #plot!(space, abs.(coeffs.β.(space)))
-    display(fig)
   end
 end
 
@@ -185,5 +171,4 @@ end
 # savefig("T200.pdf")
 # savefig("T200-raster.png")
 
-#  @save "T40.jld2" T
-#save("T100.jld2", T)
+save("T100.jld2", T)
