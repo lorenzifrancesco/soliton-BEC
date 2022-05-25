@@ -109,13 +109,13 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 ## ==================== Transmission grid configuration
 configs_GPE = []
 configs_NPSE = []
-num_barr = 5
+num_barr = 50
 barrier_list = LinRange(0, 1, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
 for vel in velocity_list
   for barrier_energy in barrier_list
-    potential = barrier_height(barrier_energy * energy_unit /500000)
+    potential = barrier_height(- barrier_energy * energy_unit /500000)
     state = initial_state_velocity(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
     push!(configs_GPE, (numerics, khaykovich_gpe, std_apparatus, potential, state))
@@ -161,14 +161,5 @@ print("\n--number of threads: ", nth)
   end
 end
 
-# fig1 = plot(title="Transmission heatmap",
-#   xlabel="barrier",
-#   ylabel="velocity",
-#   reuse=false,
-#   size=(plt_width, plt_height))
-# heatmap!(T)
-# display(fig1)
-# savefig("T200.pdf")
-# savefig("T200-raster.png")
-
-save("T100.jld2", T)
+write("well_T_50_n.bin", Tn)
+write("well_T_50_g.bin", Tg)
