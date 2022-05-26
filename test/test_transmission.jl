@@ -104,9 +104,9 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 504
-barrier_list = LinRange(0, 1, num_barr)
-velocity_list = LinRange(0, 1, num_barr)
+num_barr = 216
+barrier_list = LinRange(0, 0.3, num_barr)
+velocity_list = LinRange(0, 0.3, num_barr)
 
 for vel in velocity_list
   for barrier_energy in barrier_list
@@ -124,6 +124,7 @@ mem_limit = 15000000000 #byte
 
 
 T = zeros(Float64, length(velocity_list), length(barrier_list))
+max = zeros(Float64, length(velocity_list), length(barrier_list))
 
 nth = Threads.nthreads() #print number of threads
 print("\nNumber of threads: ", nth, "\n")
@@ -138,11 +139,13 @@ for iv in axes(velocity_list, 1)
     
     # potential space index
     coeffs = get_coefficients(sim, app, pot, state)
-    time, space, ψ, ψ_spect = ssfm_propagate(numerics, coeffs)
+    time, space, ψ, ψ_spect, max_amplitude = ssfm_propagate(numerics, coeffs)
     #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
 
     T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds)
+    max[iv, ib] = max_amplitude
   end
 end
 
 write("T.bin", T)
+write("max.bin", max)

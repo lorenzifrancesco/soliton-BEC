@@ -72,17 +72,20 @@ function ssfm_propagate(num::Numerics, coeffs::Coefficients)
 
   fwd_disp = exp.(num.dt / 2 .* coeffs.α * k .^ 2)
   fwd_curvature = exp.(num.dt / 2 .* coeffs.β.(space))
-
+  max_amplitude = maximum(abs.(ψ).^2)
   for n = 1:time_steps-1
 
     ψ_spect = fft(ψ)
     ψ_spect = ψ_spect .* fwd_disp
     ψ = ifft(ψ_spect)
     ψ= ψ .* exp.(num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
+    if max_amplitude < maximum(abs.(ψ).^2)
+      max_amplitude = maximum(abs.(ψ).^2)
+    end
   end
   ψ_spect = fft(ψ)
 
-  return time, space, ψ, ψ_spect
+  return time, space, ψ, ψ_spect, max_amplitude
 end
 
 function ground_state_solve(num::Numerics, coeffs::Coefficients)
