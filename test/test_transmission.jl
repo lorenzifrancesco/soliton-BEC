@@ -30,11 +30,6 @@ print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
-  "GPE",
-  "barrier",
-)
-# --------- Simulation ---------
-khaykovich_npse = Simulation(
   "NPSE",
   "barrier",
 )
@@ -108,14 +103,8 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 
 ## ==================== Transmission grid configuration
-<<<<<<< HEAD
 configs = []
 num_barr = 216
-=======
-configs_GPE = []
-configs_NPSE = []
-num_barr = 50
->>>>>>> GPE-vs-NPSE
 barrier_list = LinRange(0, 0.3, num_barr)
 velocity_list = LinRange(0, 0.3, num_barr)
 
@@ -124,9 +113,7 @@ for vel in velocity_list
     potential = barrier_height(barrier_energy * energy_unit /500000)
     state = initial_state_velocity(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
-    push!(configs_GPE, (numerics, khaykovich_gpe, std_apparatus, potential, state))
-    push!(configs_NPSE, (numerics, khaykovich_npse, std_apparatus, potential, state))
-
+    push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
   end
 end
 
@@ -136,7 +123,6 @@ mem_limit = 15000000000 #byte
 #run_dynamics(configs[20*20 - 5]...)
 
 
-<<<<<<< HEAD
 T = zeros(Float64, length(velocity_list), length(barrier_list))
 max = zeros(Float64, length(velocity_list), length(barrier_list))
 
@@ -163,41 +149,3 @@ end
 
 write("T.bin", T)
 write("max.bin", max)
-=======
-Tg = zeros(Float64, length(velocity_list), length(barrier_list))
-Tn = zeros(Float64, length(velocity_list), length(barrier_list))
-ΔT = zeros(Float64, length(velocity_list), length(barrier_list))
-max_amplitude_g = zeros(Float64, length(velocity_list), length(barrier_list))
-max_amplitude_n = zeros(Float64, length(velocity_list), length(barrier_list))
-nth = Threads.nthreads() #print number of threads
-print("\n--number of threads: ", nth)
-
- for iv in axes(velocity_list, 1)
-  
-  Threads.@threads for ib in axes(barrier_list, 1)
-
-    (numerics_g, sim_g, app_g, pot_g, state_g) = configs_GPE[(iv-1) * num_barr + ib]
-    (numerics_n, sim_n, app_n, pot_n, state_n) = configs_NPSE[(iv-1) * num_barr + ib]
-
-    # potential space index
-    coeffs_g = get_coefficients(sim_g, app_g, pot_g, state_g)
-    coeffs_n = get_coefficients(sim_n, app_n, pot_n, state_n)
-
-    time, space, ψg, ψ_spectg = ssfm_solve(numerics_g, coeffs_g)
-    time, space, ψn, ψ_spectn = ssfm_solve(numerics_n, coeffs_n)
-
-    Tg[iv, ib] = sum(abs.(ψg[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_g.ds)
-    Tn[iv, ib] = sum(abs.(ψn[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_n.ds)
-    ΔT[iv, ib] = Tg[iv, ib] - Tn[iv, ib]
-    max_amplitude_g[iv, ib] = maximum(abs.(ψg).^2)
-    max_amplitude_n[iv, ib] = maximum(abs.(ψn).^2)
-
-    print("\nTg[", iv, ", ", ib ,"] = ", Tg[iv, ib], "<--> Tn[", iv, ", ", ib ,"] = ", Tn[iv, ib])
-  end
-end
-
-write("zoom_well_T_50_n.bin", Tn)
-write("zoom_well_T_50_g.bin", Tg)
-write("zoom_max_amplitude_g.bin", max_amplitude_g)
-write("zoom_max_amplitude_n.bin", max_amplitude_n)
->>>>>>> GPE-vs-NPSE
