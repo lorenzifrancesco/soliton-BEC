@@ -105,12 +105,12 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 ## ==================== Transmission grid configuration
 configs = []
 num_barr = 216
-barrier_list = LinRange(0, 0.3, num_barr)
-velocity_list = LinRange(0, 0.3, num_barr)
+barrier_list = LinRange(0, 1 * 15036, num_barr)
+velocity_list = LinRange(0, 1, num_barr)
 
 for vel in velocity_list
   for barrier_energy in barrier_list
-    potential = barrier_height(barrier_energy * energy_unit /500000)
+    potential = barrier_height(barrier_energy * hbar)
     state = initial_state_velocity(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
     push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
