@@ -110,12 +110,12 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 configs_GPE = []
 configs_NPSE = []
 num_barr = 50
-barrier_list = LinRange(0, 1, num_barr)
-velocity_list = LinRange(0, 1, num_barr)
+barrier_list = LinRange(0, 0.3, num_barr)
+velocity_list = LinRange(0, 0.3, num_barr)
 
 for vel in velocity_list
   for barrier_energy in barrier_list
-    potential = barrier_height(- barrier_energy * energy_unit /500000)
+    potential = barrier_height(barrier_energy * energy_unit /500000)
     state = initial_state_velocity(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
     push!(configs_GPE, (numerics, khaykovich_gpe, std_apparatus, potential, state))
@@ -136,7 +136,8 @@ plt_height = 600
 Tg = zeros(Float64, length(velocity_list), length(barrier_list))
 Tn = zeros(Float64, length(velocity_list), length(barrier_list))
 ΔT = zeros(Float64, length(velocity_list), length(barrier_list))
-
+max_amplitude_g = zeros(Float64, length(velocity_list), length(barrier_list))
+max_amplitude_n = zeros(Float64, length(velocity_list), length(barrier_list))
 nth = Threads.nthreads() #print number of threads
 print("\n--number of threads: ", nth)
 
@@ -157,9 +158,14 @@ print("\n--number of threads: ", nth)
     Tg[iv, ib] = sum(abs.(ψg[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_g.ds)
     Tn[iv, ib] = sum(abs.(ψn[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics_n.ds)
     ΔT[iv, ib] = Tg[iv, ib] - Tn[iv, ib]
+    max_amplitude_g[iv, ib] = maximum(abs.(ψg).^2)
+    max_amplitude_n[iv, ib] = maximum(abs.(ψn).^2)
+
     print("\nTg[", iv, ", ", ib ,"] = ", Tg[iv, ib], "<--> Tn[", iv, ", ", ib ,"] = ", Tn[iv, ib])
   end
 end
 
-write("well_T_50_n.bin", Tn)
-write("well_T_50_g.bin", Tg)
+write("zoom_well_T_50_n.bin", Tn)
+write("zoom_well_T_50_g.bin", Tg)
+write("zoom_max_amplitude_g.bin", max_amplitude_g)
+write("zoom_max_amplitude_n.bin", max_amplitude_n)
