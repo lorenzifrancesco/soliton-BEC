@@ -30,7 +30,7 @@ print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
-  "NPSE",
+  "GPE",
   "barrier",
 )
 
@@ -147,5 +147,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T_wider.bin", T)
-write("max_wider.bin", max)
+write("T_wider_GPE.bin", T)
+write("max_wider_GPE.bin", max)
