@@ -82,7 +82,7 @@ end
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 1e-3, #width
+    4.5*1e-6, #width
     0, #position
     energy, #energy
     0, #ϵ
@@ -147,5 +147,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T.bin", T)
-write("max.bin", max)
+write("T_wider.bin", T)
+write("max_wider.bin", max)
