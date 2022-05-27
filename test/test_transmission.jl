@@ -12,7 +12,7 @@ width = 1.42e-6
 mass = 6.941 * 1.660539e-27
 omega_perp = 2 * pi * 710
 l_perp = sqrt(hbar / (mass * omega_perp))
-N = 4e3
+N = 4e3 
 as = -0.21e-9
 
 interaction_g = abs(2*hbar^2 * as / mass / l_perp^2)
@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 50
+num_barr = 480
 barrier_list = LinRange(0, 1 * 15036, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
