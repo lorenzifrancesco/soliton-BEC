@@ -30,7 +30,7 @@ print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
-  "GPE",
+  "NPSE",
   "barrier",
 )
 
@@ -82,7 +82,7 @@ end
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    4.5*1e-6, #width
+    1e-6, #width
     0, #position
     energy, #energy
     0, #ϵ
@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 216
+num_barr = 50
 barrier_list = LinRange(0, 1 * 15036, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -147,5 +147,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T_wider_GPE.bin", T)
-write("max_wider_GPE.bin", max)
+write("T_reasonable_NPSE.bin", T)
+write("max_reasonable_NPSE.bin", max)
