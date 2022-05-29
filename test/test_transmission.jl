@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 480
+num_barr = 256
 barrier_list = LinRange(0, 1 * 15036, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -147,5 +147,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T_reasonable_NPSE.bin", T)
-write("max_reasonable_NPSE.bin", max)
+write("T_reasonable_NPSE_k0_256.bin", T)
+write("max_reasonable_NPSE_k0_256.bin", max)
