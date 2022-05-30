@@ -70,7 +70,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 1e-3, #dt
+    T * 5e-4, #dt
     L, #S
     L * 5e-4, #ds
   )
@@ -146,5 +146,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T_discontinuity.bin", T)
+write("T_discontinuity_better.bin", T)
 #write(".bin", max)
