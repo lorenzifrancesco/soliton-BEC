@@ -101,10 +101,10 @@ normd_vel = phys_vel*hbar/ggg/N
 Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 #print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
 
-
+as = -0.21e-9 * 0
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 128
+num_barr = 80
 barrier_list = LinRange(0, 1 * 15036/4, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -147,5 +147,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T_reas_barr.bin", T)
-write("max_reas_barr.bin", max)
+write("T_linear.bin", T)
+#write(".bin", max)
