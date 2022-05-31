@@ -5,11 +5,10 @@ export Numerics, Simulation, Apparatus, Potential, InitialState, run_dynamics, r
 using Printf
 using PhysicalConstants
 using FFTW
-using Plots
-pyplot()
 using ProgressMeter
 using QuadGK
 using Elliptic
+using DifferentialEquations
 
 include("physics.jl")
 include("solver.jl")

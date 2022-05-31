@@ -16,19 +16,6 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   ψ_spect = zeros(ComplexF64, space_steps, time_steps)
 
   waveform = coeffs.initial.(space)
-  # fig0 = plot(space * 1e3,
-  #   abs.(waveform) .^ 2,
-  #   title="initial configuration",
-  #   xlabel="space [mm]",
-  #   show=true,
-  #   reuse=false,
-  #   label="initial state")
-
-  # fig1 = plot(space * 1e3,
-  #   abs.(coeffs.β.(space)),
-  #   show=true,
-  #   reuse=false,
-  #   label="potential")
 
   ## [SPACE INDEX, TIME INDEX]
   ψ[:, 1] = waveform
@@ -142,55 +129,16 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
   return time, space, ψ, ψ_spect
 end
 
+# function 3d_ssfm_solve(num::Numerics, coeffs::Coefficients)
+#   f(u,p,t) = 1.01*u
+#   u0 = 1/2
+#   tspan = (0.0,1.0)
+#   prob = ODEProblem(f,u0,tspan)
+#   sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
 
-function plot_dynamics(time, space, ψ, ψ_spect)
-  pyplot()
-  # Natural orientation choice for plot 
-  fig2 = heatmap(time * 1e3,
-    space * 1e3,
-    abs.(ψ[:, :]) .^ 2,
-    show=true,
-    title="|ψ|^2",
-    ylabel="space [mm]",
-    xlabel="time [ms]",
-    colorrange=(0, 1),
-    reuse=false,
-    size=(800, 600))
+# end
 
-  # fig2_bis = heatmap(time * 1e3,
-  #   space * 1e3,
-  #   angle.(ψ[:, :]),
-  #   show=true,
-  #   title="|ψ|^2",
-  #   ylabel="space [mm]",
-  #   xlabel="time [ms]",
-  #   colorrange=(0, 1),
-  #   reuse=false,
-  #   size=(800, 600))
-
-  fig3 = plot(space * 1e3,
-    abs.(ψ[:, end]) .^ 2,
-    title="evolved |ψ|^2",
-    xlabel="space [mm]",
-    reuse=false,
-    label="t=t_max")
-  plot!(space * 1e3,
-    abs.(ψ[:, 1]) .^ 2,
-    show=true,
-    reuse=false,
-    label="t=0",
-    size=(800, 600))
-end
-
-
-function plot_ground_state(time, space, ψ, ψ_spect)
-  pyplot()
-  # Natural orientation choice for plot 
-  fig3 = plot(space * 1e3,
-    abs.(ψ) .^ 2,
-    title="stationary |ψ|^2",
-    xlabel="space [mm]",
-    reuse=false,
-    show=true,
-    label="t=t_max")
-end
+# prob = ODEP
+# domain = (0,1,0,1)
+# partition = (100,100)
+# model = CartesianDiscreteModel(domain,partition)
