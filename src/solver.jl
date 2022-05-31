@@ -125,22 +125,31 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
 end
 
 
-function pseudospectral_solve(num::Numerics, prop::Function)
+function pseudospectral_solve(num::Numerics, coeffs::Coefficients)
+  time_steps = Int(floor(num.T / num.dt))
+  time = LinRange(0, num.T, time_steps)
 
-  ψ_x = zeros(ComplexF64, space_steps, time_steps)
-  ψ_k = zeros(ComplexF64, space_steps, time_steps)
+  space_steps = Int(floor(num.S / num.ds))
+  space = LinRange(-num.S / 2, num.S / 2, space_steps)
+  
+  waveform = coeffs.initial.(space) |> complex
 
-  waveform = coeffs.initial.(space)
-
-  ## [SPACE INDEX, TIME INDEX]
-  ψ_x[:, 1] = waveform
   # Scale factor in fourier transform are inessential, do not include dμx / dμk
-  u0 = fft(ψ_x[:, n])
-  tspan = (time[1], time[end])
-  prob = ODEProblem(propagation_function,u0,tspan)
-  time, ψ_k = solve(prob, RK4, reltol=1e-8, abstol=1e-8)
+  u0 = fft(waveform)
+  
+#  tspan = (time[1], time[end])
+  p = Para(num, coeffs)
 
-  for i in time_steps
+  print("\n\nDefine the ODEProblem\n")
+  display(u0)
+  problem = ODEProblem(propagation_function, u0, (0.0, 0.2), p)
+  print("\n\n=========================== Launch Solve ============================\n")
+  time, ψ_k = solve(problem, Tsit5(), reltol=1e-3, abstol=1e-3)
+  display(time)
+  #print(abs2.(ψ_k))
+  ψ_x = ψ_k
+
+  for i in range(length(time))
     ψ_x[:, i] = ifft(ψ_k[:, i])
   end
 

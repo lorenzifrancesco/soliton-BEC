@@ -43,6 +43,10 @@ struct Coefficients
     initial::Function
 end
 
+struct Para
+    num::Numerics
+    coeffs::Coefficients
+end
 
 function potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
@@ -142,23 +146,25 @@ function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state
 end
 
 
-function propagation_design!(dϕ::ComplexF64, ϕ::ComplexF64, num::Numerics, coeffs::Coefficients)
+function propagation_function(ϕ::Array{ComplexF64, 1}, p::Para, t)
     # solve without specify the mesh
+    @unpack num, coeffs = p
     time_steps = Int(floor(num.T / num.dt))
     time = LinRange(0, num.T, time_steps)
-
     space_steps = Int(floor(num.S / num.ds))
     space = LinRange(-num.S / 2, num.S / 2, space_steps)
 
     # Spatial frequency range computation
     k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
     k = fftshift(k)
-
     dϕ = @. (-im * coeffs.α * k .^ 2)*ϕ
     ψ = ifft(dϕ)
     ψ = @. (-im* (coeffs.β(space) - coeffs.γ(ψ))) * ψ
     dϕ = fft(ψ)
-    return nothing
+    display(dϕ)
+    print("function call!")
+    #print(dϕ)
+    return dϕ
 end
 
 

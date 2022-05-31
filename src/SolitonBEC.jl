@@ -9,6 +9,7 @@ using ProgressMeter
 using QuadGK
 using Elliptic
 using DifferentialEquations
+using UnPack
 
 include("physics.jl")
 include("solver.jl")

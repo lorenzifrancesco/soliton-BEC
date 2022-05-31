@@ -67,9 +67,9 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 2e-4, #dt
+    T * 1e-3, #dt
     L, #S
-    L * 2e-4, #ds
+    L * 1e-3, #ds
   )
   return num
 end
@@ -125,7 +125,7 @@ plt_height = 600
 T = zeros(Float64, length(velocity_list), length(barrier_list))
 
 nth = Threads.nthreads() #print number of threads
-print("number of threads: ", nth)
+print("\n-->Number of threads: ", nth)
 
 Threads.@threads for iv in axes(velocity_list, 1)
   
@@ -135,8 +135,8 @@ Threads.@threads for iv in axes(velocity_list, 1)
 
     # potential space index
     coeffs = get_coefficients(sim, app, pot, state)
-    prop(dϕ::ComplexF64, ϕ::ComplexF64) = propagation_design!(dϕ::ComplexF64, ϕ::ComplexF64, num,  coeffs)
-    time, space, ψ, ψ_spect = pseudospectral_solve(numerics, prop)
+    print("\nlaunch pseudospectral solver")
+    time, space, ψ, ψ_spect = pseudospectral_solve(numerics, coeffs)
 
     time_old, space_old, ψ_old, ψ_spect_old = ssfm_solve(numerics, coeffs)
 
