@@ -1,8 +1,6 @@
 ### TEST FOR THE TRANSMISSION COEFFICIENT FOR DIFFERENT SOLITON VELOCITIES AND BARRIER STRENGTHS
-## PLOTTING RESULTS IN NORMALIZED COORDINATES AS GARDNER et al
 using SolitonBEC
 using Printf
-using Plots
 using Elliptic
 using Distributed
 #using FileIO
@@ -117,7 +115,6 @@ for vel in velocity_list
 end
 
 mem_limit = 15000000000 #byte
-pyplot()
 plt_width = 800
 plt_height = 600
 
@@ -138,35 +135,24 @@ Threads.@threads for iv in axes(velocity_list, 1)
 
     # potential space index
     coeffs = get_coefficients(sim, app, pot, state)
-    time, space, ψ, ψ_spect = ssfm_solve(numerics, coeffs)
+    prop(dϕ::ComplexF64, ϕ::ComplexF64) = propagation_design!(dϕ::ComplexF64, ϕ::ComplexF64, num,  coeffs)
+    time, space, ψ, ψ_spect = pseudospectral_solve(numerics, prop)
 
+    time_old, space_old, ψ_old, ψ_spect_old = ssfm_solve(numerics, coeffs)
+
+    display(ψ - ψ_old)
     #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
 
     T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics.ds)
     print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
-    
-    #counter = sum(abs.(ψ[1:Int(floor(length(space)/2)), end]) .^ 2 * numerics.ds)
-    #print("\n\t Total integral: ", T[iv, ib]+counter)
-    # fig = plot(space, abs.(ψ[:, end]).^2, title="Transmission heatmap",
-    # xlabel="barrier",
-    # ylabel="velocity",
-    # reuse=false,
-    # size=(plt_width, plt_height))
-    # #plot!(abs.(ψ[Int(floor(length(space)/2)):end, end]))
-    # #plot!(space, abs.(coeffs.β.(space)))
-    # display(fig)
+  
   end
 end
 
-fig1 = plot(title="Transmission heatmap",
-  xlabel="barrier",
-  ylabel="velocity",
-  reuse=false,
-  size=(plt_width, plt_height))
-heatmap!(T)
-display(fig1)
-savefig("T200.pdf")
-savefig("T200-raster.png")
+
 
 #  @save "T40.jld2" T
 #save("T100.jld2", T)
+
+
+# LET US USE THE PSEUDOSPECTRAL SOLVE

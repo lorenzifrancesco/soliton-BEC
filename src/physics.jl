@@ -43,6 +43,7 @@ struct Coefficients
     initial::Function
 end
 
+
 function potential(sim::Simulation, app::Apparatus, pot::Potential, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
@@ -123,6 +124,7 @@ function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
     end
 end
 
+
 function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
     # implement with PhysicalConstants.CODATA2018.h
     hbar = 6.62607015e-34 / (2 * pi)
@@ -140,13 +142,33 @@ function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state
 end
 
 
+function propagation_design!(dϕ::ComplexF64, ϕ::ComplexF64, num::Numerics, coeffs::Coefficients)
+    # solve without specify the mesh
+    time_steps = Int(floor(num.T / num.dt))
+    time = LinRange(0, num.T, time_steps)
+
+    space_steps = Int(floor(num.S / num.ds))
+    space = LinRange(-num.S / 2, num.S / 2, space_steps)
+
+    # Spatial frequency range computation
+    k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
+    k = fftshift(k)
+
+    dϕ = @. (-im * coeffs.α * k .^ 2)*ϕ
+    ψ = ifft(dϕ)
+    ψ = @. (-im* (coeffs.β(space) - coeffs.γ(ψ))) * ψ
+    dϕ = fft(ψ)
+    return nothing
+end
+
+
 function run_ground_state(num::Numerics, sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
 
     coeffs = get_coefficients(sim, app, pot, state)
 
     display("Running ground-state simulation")
     results = ground_state_solve(num, coeffs)
-    plot_ground_state(results...)
+    display(results...)
 end
 
 
@@ -156,5 +178,5 @@ function run_dynamics(num::Numerics, sim::Simulation, app::Apparatus, pot::Poten
 
     display("Running Dynamic simulation")
     results = ssfm_solve(num, coeffs)
-    plot_dynamics(results...)
+    display(results...)
 end

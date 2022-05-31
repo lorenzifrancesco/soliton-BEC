@@ -5,10 +5,6 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   time = LinRange(0, num.T, time_steps)
   space = LinRange(-num.S / 2, num.S / 2, space_steps)
 
-  # print("Simulation diagnostics:\n")
-  # @printf("Time  : from %6.3i ms, to  %6.3i ms; %6d steps \n", time[1] * 1e3, time[time_steps] * 1e3, time_steps)
-  # @printf("Space : from %6.3f mm, to  %6.3f mm; %6d steps \n", space[1] * 1e3, space[space_steps] * 1e3, space_steps)
-
   # Spatial frequency range computation
   k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
   k = fftshift(k)
@@ -22,8 +18,7 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
 
   fwd_disp = exp.(num.dt / 2 .* coeffs.α * k .^ 2)
   fwd_curvature = exp.(num.dt / 2 .* coeffs.β.(space))
-  # display("Gamma at peak")
-  # display(coeffs.γ.(ψ[Int(floor(space_steps/2)),1]))
+
   #@showprogress "Propagating the field... " 
   for n = 1:time_steps-1
     # if 1+2*app.as*(app.N - 1) * abs.(ψ[Int(floor(space_steps/2)), n])^2 > 1
@@ -129,16 +124,25 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
   return time, space, ψ, ψ_spect
 end
 
-# function 3d_ssfm_solve(num::Numerics, coeffs::Coefficients)
-#   f(u,p,t) = 1.01*u
-#   u0 = 1/2
-#   tspan = (0.0,1.0)
-#   prob = ODEProblem(f,u0,tspan)
-#   sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
 
-# end
+function pseudospectral_solve(num::Numerics, prop::Function)
 
-# prob = ODEP
-# domain = (0,1,0,1)
-# partition = (100,100)
-# model = CartesianDiscreteModel(domain,partition)
+  ψ_x = zeros(ComplexF64, space_steps, time_steps)
+  ψ_k = zeros(ComplexF64, space_steps, time_steps)
+
+  waveform = coeffs.initial.(space)
+
+  ## [SPACE INDEX, TIME INDEX]
+  ψ_x[:, 1] = waveform
+  # Scale factor in fourier transform are inessential, do not include dμx / dμk
+  u0 = fft(ψ_x[:, n])
+  tspan = (time[1], time[end])
+  prob = ODEProblem(propagation_function,u0,tspan)
+  time, ψ_k = solve(prob, RK4, reltol=1e-8, abstol=1e-8)
+
+  for i in time_steps
+    ψ_x[:, i] = ifft(ψ_k[:, i])
+  end
+
+  return time, space, ψ_x, ψ_k
+end
