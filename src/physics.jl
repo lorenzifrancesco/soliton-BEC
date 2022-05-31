@@ -175,6 +175,7 @@ function get_coefficients_3d(sim::Simulation, app::Apparatus, pot::Potential, st
     beta(s::Float64) = β(sim::Simulation, app::Apparatus, pot::Potential, s)
     gamma(ψ::ComplexF64) = γ(sim::Simulation, app::Apparatus, state::InitialState, ψ)
     initial_state_axial(s::Float64) = wave(sim::Simulation, app::Apparatus, state::InitialState, s)
+    initial_state_radial(r::Float64) = 
     return Coefficients(α, beta, gamma, initial_state)
 end
 
