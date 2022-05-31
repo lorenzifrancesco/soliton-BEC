@@ -5,6 +5,15 @@ struct Numerics
     ds::Float64
 end
 
+struct 3DNumerics
+    T::Float64
+    dt::Float64
+    S::Float64
+    ds::Float64
+    R::Float64
+    dr::Float64
+end
+
 struct Simulation
     equation::String #("GPE", "NPSE")
     potential::String #("barrier", "ellipse")
@@ -41,6 +50,15 @@ struct Coefficients
     β::Function
     γ::Function
     initial::Function
+end
+
+struct 3DCoefficients
+    α::ComplexF64
+    β::Function
+    confinment::Function
+    γ::Function
+    initial_radial::Function
+    initial_axial::Function
 end
 
 struct Para
@@ -111,7 +129,6 @@ function γ(sim::Simulation, app::Apparatus, state::InitialState, ψ::ComplexF64
     return value
 end
 
-
 function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
@@ -145,28 +162,43 @@ function get_coefficients(sim::Simulation, app::Apparatus, pot::Potential, state
     return Coefficients(α, beta, gamma, initial_state)
 end
 
+function get_coefficients_3d(sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
+    # implement with PhysicalConstants.CODATA2018.h
+    hbar = 6.62607015e-34 / (2 * pi)
+    l_perp = sqrt(hbar / (app.m * app.ω_perp))
+    l_z = sqrt(hbar / (app.m * app.ω_z))
+    npse_gamma = app.γ * hbar * app.ω_perp / l_z^6 * 1e-4
+    @assert(sim.equation in ["NPSE", "GPE"])
+    @assert(pot.type in ["barrier", "ellipse", ""])
+
+    α = -im * hbar / (2 * app.m)
+    beta(s::Float64) = β(sim::Simulation, app::Apparatus, pot::Potential, s)
+    gamma(ψ::ComplexF64) = γ(sim::Simulation, app::Apparatus, state::InitialState, ψ)
+    initial_state_axial(s::Float64) = wave(sim::Simulation, app::Apparatus, state::InitialState, s)
+    return Coefficients(α, beta, gamma, initial_state)
+end
 
 function propagation_function(ϕ::Array{ComplexF64, 1}, p::Para, t)
     # solve without specify the mesh
     @unpack num, coeffs = p
     time_steps = Int(floor(num.T / num.dt))
-    time = LinRange(0, num.T, time_steps)
     space_steps = Int(floor(num.S / num.ds))
     space = LinRange(-num.S / 2, num.S / 2, space_steps)
-
     # Spatial frequency range computation
     k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
     k = fftshift(k)
     dϕ = @. (-im * coeffs.α * k .^ 2)*ϕ
     ψ = ifft(dϕ)
-    ψ = @. (-im* (coeffs.β(space) - coeffs.γ(ψ))) * ψ
+    ψ = (-coeffs.β.(space) ) .* ψ
     dϕ = fft(ψ)
-    display(dϕ)
-    print("function call!")
+    #print("function call!")
     #print(dϕ)
     return dϕ
 end
 
+# function propagation_function(ϕ::Array{ComplexF64, 1}, p::Para, t)
+#     return fft(ϕ)
+# end
 
 function run_ground_state(num::Numerics, sim::Simulation, app::Apparatus, pot::Potential, state::InitialState)
 

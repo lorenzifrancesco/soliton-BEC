@@ -3,6 +3,7 @@ using SolitonBEC
 using Printf
 using Elliptic
 using Distributed
+using Plots
 #using FileIO
 hbar = 6.62607015e-34 / (2 * pi)
 width = 1.42e-6
@@ -70,6 +71,10 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     T * 1e-3, #dt
     L, #S
     L * 1e-3, #ds
+    l_perp, 
+    l_perp * 1e-2, 
+    l_perp, 
+    l_perp * 1e-2,
   )
   return num
 end
@@ -126,8 +131,8 @@ T = zeros(Float64, length(velocity_list), length(barrier_list))
 
 nth = Threads.nthreads() #print number of threads
 print("\n-->Number of threads: ", nth)
-
-Threads.@threads for iv in axes(velocity_list, 1)
+#Threads.@threads
+ for iv in axes(velocity_list, 1)
   
     for (ib, barrier_energy) in enumerate(barrier_list)
 
@@ -136,23 +141,20 @@ Threads.@threads for iv in axes(velocity_list, 1)
     # potential space index
     coeffs = get_coefficients(sim, app, pot, state)
     print("\nlaunch pseudospectral solver")
-    time, space, ψ, ψ_spect = pseudospectral_solve(numerics, coeffs)
+    time, space, ψ, ψ_spect = 3d_ssfm_propagate(numerics, coeffs)
 
-    time_old, space_old, ψ_old, ψ_spect_old = ssfm_solve(numerics, coeffs)
-
-    display(ψ - ψ_old)
+    #display(ψ - ψ_old)
     #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
-
+    fig1 = plot(title="|ψ|^2 after collision with barrier",
+    xlabel="space [mm]",
+    ylabel="|ψ|^2",
+    reuse=false,
+    size=(800, 400),
+    legend=:topleft)
+    heatmap!(abs.(ψ[:, end]))
+    
     T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics.ds)
     print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
   
   end
 end
-
-
-
-#  @save "T40.jld2" T
-#save("T100.jld2", T)
-
-
-# LET US USE THE PSEUDOSPECTRAL SOLVE
