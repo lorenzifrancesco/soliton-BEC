@@ -70,9 +70,9 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 5e-4, #dt
+    T * 1e-4, #dt
     L, #S
-    L * 5e-4, #ds
+    L * 1e-3, #ds
   )
   return num
 end
