@@ -12,7 +12,7 @@ width = 1.42e-6
 mass = 6.941 * 1.660539e-27
 omega_perp = 2 * pi * 710
 l_perp = sqrt(hbar / (mass * omega_perp))
-N = 4e3 
+N = 4e3
 as = -0.21e-9
 
 interaction_g = abs(2*hbar^2 * as / mass / l_perp^2)
@@ -50,7 +50,7 @@ L = 2 * space_unit
 
 v0 = 1*velocity_unit
 x0 =-L/4
-# --------- InitialStates ---------   
+# --------- InitialStates ---------
 function initial_state_velocity(velocity::Float64)
   init = InitialState1 = InitialState(
     "sech", #type
@@ -70,7 +70,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 1e-4, #dt
+    T * 1e-3, #dt
     L, #S
     L * 1e-3, #ds
   )
@@ -81,7 +81,7 @@ end
 
 function barrier_height(energy::Float64)
   r = Potential(
-    "barrier", # type 
+    "barrier", # type
     1e-6, #width
     0, #position
     energy, #energy
@@ -103,7 +103,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 100
+num_barr = 5
 barrier_list = LinRange(0, 0.2 * 15036/8, num_barr)
 velocity_list = LinRange(0, 0.2, num_barr)
 
@@ -135,7 +135,7 @@ for iv in axes(velocity_list, 1)
     print("\n\t Barr. ", ib, " in vel. ", iv)
 
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
-    
+
     # potential space index
     coeffs = get_coefficients(sim, app, pot, state)
     time, space, ψ, ψ_spect, max_amplitude = ssfm_propagate(numerics, coeffs)

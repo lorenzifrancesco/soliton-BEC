@@ -11,7 +11,7 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
 
   # Spatial frequency range computation
   k = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), space_steps)
-  k = fftshift(k)
+  k .= fftshift(k)
   ψ = zeros(ComplexF64, space_steps, time_steps)
   ψ_spect = zeros(ComplexF64, space_steps, time_steps)
 
@@ -37,7 +37,7 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
   fwd_curvature = exp.(num.dt / 2 .* coeffs.β.(space))
   # display("Gamma at peak")
   # display(coeffs.γ.(ψ[Int(floor(space_steps/2)),1]))
-  #@showprogress "Propagating the field... " 
+  #@showprogress "Propagating the field... "
   for n = 1:time_steps-1
     # if 1+2*app.as*(app.N - 1) * abs.(ψ[Int(floor(space_steps/2)), n])^2 > 1
     #   display("Collapse detected")
@@ -46,7 +46,7 @@ function ssfm_solve(num::Numerics, coeffs::Coefficients)
     ψ_spect[:, n] = fft(ψ[:, n])
     ψ_spect[:, n] = ψ_spect[:, n] .* fwd_disp
     ψ[:, n] = ifft(ψ_spect[:, n])
-    ψ[:, n+1] = ψ[:, n] .* exp.(num.dt / 2 .* coeffs.γ.(ψ[:, n])) .* fwd_curvature  ## this is an Euler step
+    ψ[:, n+1] .= ψ[:, n] .* exp.(num.dt / 2 .* coeffs.γ.(ψ[:, n])) .* fwd_curvature  ## this is an Euler step
   end
   ψ_spect[:, time_steps] = fft(ψ[:, time_steps])
 
@@ -78,7 +78,7 @@ function ssfm_propagate(num::Numerics, coeffs::Coefficients)
     ψ_spect = fft(ψ)
     ψ_spect = ψ_spect .* fwd_disp
     ψ = ifft(ψ_spect)
-    ψ= ψ .* exp.(num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
+    ψ .= ψ .* exp.(num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
     if max_amplitude < maximum(abs.(ψ).^2)
       max_amplitude = maximum(abs.(ψ).^2)
     end
@@ -105,7 +105,7 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
   ψ = zeros(ComplexF64, space_steps)
   ψ_spect = zeros(ComplexF64, space_steps)
 
-  #Implement gaussian initial state 
+  #Implement gaussian initial state
   wave(s::Float64) = sqrt(1 / (sqrt(2 * pi) * num.S / 3)) * exp.(-(s) .^ 2 / (4 * num.S / 3^2))
   integral, error = quadgk(s -> abs(wave(s))^2, -num.S / 2, +num.S / 2)
 
@@ -129,7 +129,7 @@ function ground_state_solve(num::Numerics, coeffs::Coefficients)
       ψ_spect = fft(ψ)
       ψ_spect = ψ_spect .* fwd_disp
       ψ = ifft(ψ_spect)
-      ψ = ψ .* exp.(im * num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
+      ψ .= ψ .* exp.(im * num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
       # renormalization
       #isplay(sum(abs.(ψ) .^ 2 * num.ds))
       current = sum(abs.(ψ) .^ 2 * num.ds)
