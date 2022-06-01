@@ -103,7 +103,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 5
+num_barr = 100
 barrier_list = LinRange(0, 0.2 * 15036/8, num_barr)
 velocity_list = LinRange(0, 0.2, num_barr)
 
@@ -146,5 +146,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T_discontinuity_better.bin", T)
+write("T_linear.bin", T)
 #write(".bin", max)
