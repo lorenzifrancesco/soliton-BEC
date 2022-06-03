@@ -78,7 +78,7 @@ function ssfm_propagate(num::Numerics, coeffs::Coefficients)
     ψ_spect = fft(ψ)
     ψ_spect = ψ_spect .* fwd_disp
     ψ = ifft(ψ_spect)
-    ψ .= ψ .* fwd_curvature  ## this is an Euler step
+    ψ .= ψ .*  exp.(num.dt / 2 .* coeffs.γ.(ψ[:, n]))  .* fwd_curvature  ## this is an Euler step
     if max_amplitude < maximum(abs.(ψ).^2)
       max_amplitude = maximum(abs.(ψ).^2)
     end

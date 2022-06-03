@@ -70,7 +70,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics(
     T, #T
-    T * 1e-3, #dt
+    T * 1e-4, #dt
     L, #S
     L * 1e-3, #ds
   )
@@ -82,7 +82,7 @@ end
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type
-    1e-6, #width
+    3e-6, #width
     0, #position
     energy, #energy
     0, #ϵ
@@ -146,5 +146,5 @@ for iv in axes(velocity_list, 1)
   end
 end
 
-write("T_linear.bin", T)
+write("T_wide_barrier.bin", T)
 #write(".bin", max)
