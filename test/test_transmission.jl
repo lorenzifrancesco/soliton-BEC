@@ -30,7 +30,7 @@ print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
-  "NPSE",
+  "GPE",
   "barrier",
 )
 
