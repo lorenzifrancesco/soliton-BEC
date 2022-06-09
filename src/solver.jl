@@ -70,41 +70,48 @@ function ssfm_propagate(num::Numerics, coeffs::Coefficients)
   return time, space, ψ, ψ_spect, max_amplitude
 end
 
-
-
 # impossible to keep in memory the full time evolution
-function ssfm_propagate_3d(num3D::3DNumerics, coeffs3d::3DCoefficients)
-  time_steps = Int(floor(num.T / num.dt))
-  axial_steps = Int(floor(num.S / num.ds))
-  radial_steps = Int(floor(num.R / num.dr))
+function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
+  time_steps = Int(floor(num3D.T / num3D.dt))
+  axial_steps = Int(floor(num3D.S / num3D.ds))
+  transverse_steps = Int(floor(num3D.Transverse / num3D.dtr))
 
-  time = LinRange(0, num.T, time_steps)
-  axial = LinRange(-num.S / 2, num.S / 2, axial_steps)
-  radial =  LinRange(-num.R / 2, num.R / 2, radial_steps)
+  time = LinRange(0, num3D.T, time_steps)
+  axial = LinRange(-num3D.S / 2, num3D.S / 2, axial_steps)
+  x_axis =  LinRange(-num3D.Transverse / 2, num3D.Transverse / 2, transverse_steps)
+  y_axis =  LinRange(-num3D.Transverse / 2, num3D.Transverse / 2, transverse_steps)
 
   # Spatial frequency range computation
-  ks = 2 * pi * LinRange(-1 / (2 * num.ds), 1 / (2 * num.ds), axial_steps)
+  ks = 2 * pi * LinRange(-1 / (2 * num3D.ds), 1 / (2 * num3D.ds), axial_steps)
   ks = fftshift(ks)
-  kr = 2 * pi * LinRange(-1 / (2 * num.dr), 1 / (2 * num.dr), radial_steps)
+  kr = 2 * pi * LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps)
   kr = fftshift(kr)
-  ψ = zeros(ComplexF64, axial_steps, radial_steps, radial_steps)
-  ψ_spect = zeros(ComplexF64, axial_steps, radial_steps, radial_steps)
+  ψ = zeros(ComplexF64, transverse_steps, transverse_steps, axial_steps)
+  ψ_spect = zeros(ComplexF64, transverse_steps, transverse_steps, axial_steps)
 
-  waveform = coeffs3d.initial_radial.(axial)' .* ones(axial_steps, radial_steps)  .* coeffs3d.initial_axial' .* ones(radial_steps, radial_steps) .* coeffs3d.initial_axial
-
+  # this is wrong
+  waveform = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
+  idx = 1
+  idy = 1
+  for x in x_axis
+    for y in y_axis
+      waveform[] = coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* ones(axial_steps, transverse_steps)  .* coeffs3d.initial_axial.(axial) 
+    end
+  end
+  display(abs.(waveform[:, :, 1]))
   ## [axial INDEX, TIME INDEX]
   ψ = waveform
 
-  fwd_disp = exp.(num.dt / 2 .* coeffs.α * k .^ 2)
-  fwd_axial = exp.(num.dt / 2 .* coeffs.β.(axial))
-  fwd_radial = exp.(num.dt / 2 .* coeffs.β.(radial))
+  fwd_disp = exp.(num3D.dt / 2 .* coeffs.α * k .^ 2)
+  fwd_axial = exp.(num3D.dt / 2 .* coeffs.β.(axial))
+  fwd_radial = exp.(num3D.dt / 2 .* coeffs.β.(radial))
   max_amplitude = maximum(abs.(ψ).^2)
   for n = 1:time_steps-1
 
     ψ_spect = fft(ψ)
     ψ_spect = ψ_spect .* fwd_disp
     ψ = ifft(ψ_spect)
-    ψ= ψ .* exp.(num.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
+    ψ= ψ .* exp.(num3D.dt / 2 .* coeffs.γ.(ψ)) .* fwd_curvature  ## this is an Euler step
     if max_amplitude < maximum(abs.(ψ).^2)
       max_amplitude = maximum(abs.(ψ).^2)
     end

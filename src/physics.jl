@@ -5,13 +5,13 @@ struct Numerics
     ds::Float64
 end
 
-struct 3DNumerics
+struct Numerics_3D
     T::Float64
     dt::Float64
     S::Float64
     ds::Float64
-    R::Float64
-    dr::Float64
+    Transverse::Float64
+    dtr::Float64
 end
 
 struct Simulation
@@ -52,11 +52,11 @@ struct Coefficients
     initial::Function
 end
 
-struct 3DCoefficients
+struct Coefficients_3D
     α::ComplexF64
     β::Function
-    confinment::Function
     γ::Function
+    confinment::Function
     initial_radial::Function
     initial_axial::Function
 end
@@ -175,8 +175,9 @@ function get_coefficients_3d(sim::Simulation, app::Apparatus, pot::Potential, st
     beta(s::Float64) = β(sim::Simulation, app::Apparatus, pot::Potential, s)
     gamma(ψ::ComplexF64) = γ(sim::Simulation, app::Apparatus, state::InitialState, ψ)
     initial_state_axial(s::Float64) = wave(sim::Simulation, app::Apparatus, state::InitialState, s)
-    initial_state_radial(r::Float64) = 
-    return Coefficients(α, beta, gamma, initial_state)
+    initial_state_radial(r::Float64) = exp(-r^2)
+    confinment(r::Float64) = r^2
+    return Coefficients_3D(α, beta, gamma, confinment, initial_state_axial, initial_state_radial)
 end
 
 function propagation_function(ϕ::Array{ComplexF64, 1}, p::Para, t)

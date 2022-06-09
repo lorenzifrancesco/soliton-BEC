@@ -66,15 +66,13 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   else
     T = abs(x0)/ velocity * 2
   end
-  num = Numerics(
+  num = Numerics_3D(
     T, #T
     T * 1e-3, #dt
     L, #S
-    L * 1e-3, #ds
+    L * 1e-1, #ds
     l_perp, 
-    l_perp * 1e-2, 
-    l_perp, 
-    l_perp * 1e-2,
+    l_perp * 1e-1, 
   )
   return num
 end
@@ -106,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 200
+num_barr = 2
 barrier_list = LinRange(0, 15036, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -139,9 +137,9 @@ print("\n-->Number of threads: ", nth)
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
 
     # potential space index
-    coeffs = get_coefficients(sim, app, pot, state)
+    coeffs = get_coefficients_3d(sim, app, pot, state)
     print("\nlaunch pseudospectral solver")
-    time, space, ψ, ψ_spect = 3d_ssfm_propagate(numerics, coeffs)
+    time, space, ψ, ψ_spect = ssfm_propagate_3d(numerics, coeffs)
 
     #display(ψ - ψ_old)
     #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
