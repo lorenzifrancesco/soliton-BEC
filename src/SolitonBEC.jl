@@ -9,7 +9,6 @@ using ProgressMeter
 using QuadGK
 using Elliptic
 using UnPack
-using Plots
 
 include("physics.jl")
 include("solver.jl")

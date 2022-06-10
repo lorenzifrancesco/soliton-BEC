@@ -105,7 +105,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 ## ==================== Transmission grid configuration
 configs = []
 num_barr = 2
-barrier_list = LinRange(0, 15036, num_barr)
+barrier_list = LinRange(0, 15036/16, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
 for vel in velocity_list
@@ -140,18 +140,19 @@ print("\n-->Number of threads: ", nth)
     coeffs = get_coefficients_3d(sim, app, pot, state)
     print("\nlaunch pseudospectral solver")
     time, space, ψ, ψ_spect = ssfm_propagate_3d(numerics, coeffs)
-
+    center = Int(floor((numerics.Transverse / 2/numerics.dtr)))
     #display(ψ - ψ_old)
     #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
-    fig1 = plot(title="|ψ|^2 after collision with barrier",
-    xlabel="space [mm]",
-    ylabel="|ψ|^2",
-    reuse=false,
-    size=(800, 400),
-    legend=:topleft)
-    heatmap!(abs.(ψ[:, end]))
+    # fig1 = plot(title="|ψ|^2 after collision with barrier",
+    # xlabel="space [mm]",
+    # ylabel="|ψ|^2",
+    # reuse=false,
+    # size=(800, 400),
+    # legend=:topleft)
+    # heatmap!(abs2.(ψ[:, :, :]))
+    # display(fig1)    
     
-    T[iv, ib] = sum(abs.(ψ[Int(floor(length(space)/2)):end, end]) .^ 2 * numerics.ds)
+    T[iv, ib] = sum(abs.(ψ[3, 3, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds)
     print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
   
   end
