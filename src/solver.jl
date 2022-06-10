@@ -93,8 +93,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   # this is wrong
   waveform = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   axial_waveforms = coeffs3d.initial_axial.(axial)
-  print("AODFNBAOSNBA")
-  display(axial)
+
   idx = 1
   for x in x_axis
     idy = 1
@@ -120,9 +119,6 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
 
   ## [axial INDEX, TIME INDEX]
   ψ = waveform
-  gr()
-  fig_axis = plot(axial, abs2.(waveform[3, 3, :]), title="initial axial distribution")
-  display(fig_axis)
 
   fwd_disp_s = exp.(num3D.dt / 2 .* coeffs3d.α * ks .^ 2)
   fwd_disp_x = exp.(num3D.dt / 2 .* coeffs3d.α * kx .^ 2)
@@ -148,7 +144,6 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     fwd_beta[:, :, ids] = exp(num3D.dt / 2 * coeffs3d.α * s ^ 2) * transverse_beta
     idk+=1
   end
-  display(abs2.(ψ[3,3,:]))
 
   max_amplitude = maximum(abs.(ψ).^2)
   for n = 1:time_steps-1
@@ -163,8 +158,9 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   end
   ψ_spect = fft(ψ)
 
-  print("\naxial distribution:\n ")
-  display(abs2.(ψ[3,3,:]))
+  gr()
+  fig_axis = plot(axial, abs2.(ψ[5, 5, :]), title="axial distribution", reuse=false)
+  display(fig_axis)
 
   return time, axial, ψ, ψ_spect, max_amplitude
 end

@@ -57,8 +57,8 @@ struct Coefficients_3D
     β::Function
     γ::Function
     confinment::Function
-    initial_radial::Function
     initial_axial::Function
+    initial_radial::Function
 end
 
 struct Para

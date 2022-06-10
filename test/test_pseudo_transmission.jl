@@ -52,7 +52,7 @@ x0 =-L/4
 function initial_state_vel(velocity::Float64)
   init = InitialState1 = InitialState(
     "sech", #type
-    width/10, # width
+    width*1.8, # width
     velocity, #v0
     x0,
   )
@@ -70,7 +70,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     T, #T
     T * 1e-2, #dt
     L, #S
-    L * 5e-2, #ds
+    L * 1e-3, #ds
     l_perp, 
     l_perp * 1e-1, 
   )
@@ -104,7 +104,7 @@ Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 2
+num_barr = 10
 barrier_list = LinRange(0, 15036/16, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -135,12 +135,11 @@ print("\n-->Number of threads: ", nth)
     for (ib, barrier_energy) in enumerate(barrier_list)
 
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
-
     # potential space index
     coeffs = get_coefficients_3d(sim, app, pot, state)
     print("\nlaunch pseudospectral solver")
     time, space, ψ, ψ_spect = ssfm_propagate_3d(numerics, coeffs)
-    center = Int(floor((numerics.Transverse / 2/numerics.dtr)))
+    axis_center = Int(floor((numerics.Transverse / 2/numerics.dtr)))
     #display(ψ - ψ_old)
     #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
     # fig1 = plot(title="|ψ|^2 after collision with barrier",
@@ -152,7 +151,7 @@ print("\n-->Number of threads: ", nth)
     # heatmap!(abs2.(ψ[:, :, :]))
     # display(fig1)    
     
-    T[iv, ib] = sum(abs.(ψ[3, 3, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds)
+    T[iv, ib] = sum(abs.(ψ[:, :, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds)
     print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
   
   end
