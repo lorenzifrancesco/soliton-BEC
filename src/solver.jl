@@ -95,7 +95,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   idy = 1
   for x in x_axis
     for y in y_axis
-      waveform[] = coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* ones(axial_steps, transverse_steps)  .* coeffs3d.initial_axial.(axial) 
+      waveform[idx, idy,:] = coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* coeffs3d.initial_axial.(axial)
     end
   end
   display(abs.(waveform[:, :, 1]))
