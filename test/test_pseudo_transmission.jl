@@ -49,10 +49,10 @@ L = 2 * space_unit
 v0 = 1*velocity_unit
 x0 =-L/4
 # --------- InitialStates ---------   
-function initial_state_velocity(velocity::Float64)
+function initial_state_vel(velocity::Float64)
   init = InitialState1 = InitialState(
     "sech", #type
-    width*1.8, # width
+    width/10, # width
     velocity, #v0
     x0,
   )
@@ -68,9 +68,9 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics_3D(
     T, #T
-    T * 1e-3, #dt
+    T * 1e-2, #dt
     L, #S
-    L * 1e-1, #ds
+    L * 5e-2, #ds
     l_perp, 
     l_perp * 1e-1, 
   )
@@ -111,7 +111,7 @@ velocity_list = LinRange(0, 1, num_barr)
 for vel in velocity_list
   for barrier_energy in barrier_list
     potential = barrier_height(barrier_energy * hbar)
-    state = initial_state_velocity(vel * velocity_unit)
+    state = initial_state_vel(vel * velocity_unit)
     numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
     push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
   end

@@ -90,44 +90,50 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   ky = fftshift(ky)
   ψ = zeros(ComplexF64, transverse_steps, transverse_steps, axial_steps)
   ψ_spect = zeros(ComplexF64, transverse_steps, transverse_steps, axial_steps)
-
   # this is wrong
   waveform = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
+  axial_waveforms = coeffs3d.initial_axial.(axial)
+  print("AODFNBAOSNBA")
+  display(axial)
   idx = 1
   for x in x_axis
     idy = 1
     for y in y_axis
-      waveform[idx, idy,:] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* coeffs3d.initial_axial.(axial)
+      waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
       idy +=1
     end
     idx+=1
   end
-  display(abs.(waveform[:, :, 1]))
+
   # Natural orientation choice for plot 
-  fig2 = heatmap(x_axis * 1e3,
-  y_axis * 1e3,
-  abs.(waveform[:, :, 1]),
-  show=true,
-  title="|ψ|^2",
-  ylabel="space [mm]",
-  xlabel="time [ms]",
-  colorrange=(0, 1),
-  reuse=false,
-  size=(800, 600))
-  display(fig2)
+  # fig2 = heatmap(x_axis * 1e3,
+  # y_axis * 1e3,
+  # abs.(waveform[:, :, 1]),
+  # show=true,
+  # title="|ψ|^2",
+  # ylabel="space [mm]",
+  # xlabel="time [ms]",
+  # colorrange=(0, 1),
+  # reuse=false,
+  # size=(800, 600))
+  # display(fig2)
 
   ## [axial INDEX, TIME INDEX]
   ψ = waveform
+  gr()
+  fig_axis = plot(axial, abs2.(waveform[3, 3, :]), title="initial axial distribution")
+  display(fig_axis)
 
   fwd_disp_s = exp.(num3D.dt / 2 .* coeffs3d.α * ks .^ 2)
   fwd_disp_x = exp.(num3D.dt / 2 .* coeffs3d.α * kx .^ 2)
   fwd_disp_y = exp.(num3D.dt / 2 .* coeffs3d.α * ky .^ 2)
   transverse_disp = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
-  transverse_disp .= fwd_disp_x .+ fwd_disp_y'
-  disp = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
+
+  transverse_disp .= fwd_disp_x .* fwd_disp_y'
+  disp = Array{ComplexF64 , 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   idk = 1
   for k in ks
-    disp[:, :, idk] = exp(num3D.dt / 2 * coeffs3d.α * k ^ 2) * transverse_disp
+    disp[:, :, idk] .= exp(num3D.dt / 2 * coeffs3d.α * k ^ 2) * transverse_disp
     idk+=1
   end
 
@@ -135,32 +141,31 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   fwd_x = exp.(num3D.dt / 2 .* coeffs3d.β.(x_axis))
   fwd_y = exp.(num3D.dt / 2 .* coeffs3d.β.(y_axis))
   transverse_beta = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
-  transverse_beta .= fwd_x .+ fwd_y'
+  transverse_beta .= fwd_x .* fwd_y'
   fwd_beta = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   ids = 1
   for s in axial
     fwd_beta[:, :, ids] = exp(num3D.dt / 2 * coeffs3d.α * s ^ 2) * transverse_beta
     idk+=1
   end
+  display(abs2.(ψ[3,3,:]))
 
   max_amplitude = maximum(abs.(ψ).^2)
-
   for n = 1:time_steps-1
     ψ_spect = fft(ψ)
     ψ_spect .= ψ_spect .* disp
     ψ = ifft(ψ_spect)
-    ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ.(ψ)) .* fwd_beta  ## this is an Euler step
+    ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ.(ψ))  ## this is an Euler step
     if max_amplitude < maximum(abs.(ψ).^2)
       max_amplitude = maximum(abs.(ψ).^2)
     end
-    display(ψ[:, :, 3])
+    #display(ψ[3, 3, :])
   end
   ψ_spect = fft(ψ)
 
-    print("\naxial distribution:\n ")
-  display(abs2.(ψ[3,3,:] ))
-  fig_axis = plot(axial, abs2.(ψ[3,3,:] ), title="asdifuvbapirfbv")
-  display(fig_axis)
+  print("\naxial distribution:\n ")
+  display(abs2.(ψ[3,3,:]))
+
   return time, axial, ψ, ψ_spect, max_amplitude
 end
 
