@@ -8,6 +8,7 @@
 #SBATCH --mem=100G
 #SBATCH --mail-user francesco.lorenzi98@gmail.com
 #SBATCH --mail-type ALL
+#SBATCH --gres=gpu:1
 
 cd $WORKING_DIR
 #your working directory
