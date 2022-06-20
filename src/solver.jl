@@ -1,3 +1,4 @@
+using CUDA.CUFFT
 hbar = 6.62607015e-34 / (2 * pi)
 
 function ssfm_solve(num::Numerics, coeffs::Coefficients)
@@ -74,28 +75,31 @@ function ssfm_propagate(num::Numerics, coeffs::Coefficients)
 end
 
 function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
-  time_steps = Int(floor(num3D.T / num3D.dt))
+  time_steps = Int(floor(num3D.T / num3D.dt))  
   axial_steps = Int(floor(num3D.S / num3D.ds))
   transverse_steps = Int(floor(num3D.Transverse / num3D.dtr))
 
-  time = LinRange(0, num3D.T, time_steps)
+  time = CuArray(LinRange(0, num3D.T, time_steps))
   axial = LinRange(-num3D.S / 2, num3D.S / 2, axial_steps)
+  print("typeof(axial), ", typeof(axial))
   x_axis =  LinRange(-num3D.Transverse / 2, num3D.Transverse / 2, transverse_steps)
-  y_axis =  LinRange(-num3D.Transverse / 2, num3D.Transverse / 2, transverse_steps)
+  y_axis = LinRange(-num3D.Transverse / 2, num3D.Transverse / 2, transverse_steps)
 
   # Spatial frequency range computation
-  ks = 2 * pi * LinRange(-1 / (2 * num3D.ds), 1 / (2 * num3D.ds), axial_steps)
+  ks = 2 * pi * Array(LinRange(-1 / (2 * num3D.ds), 1 / (2 * num3D.ds), axial_steps))
   ks = fftshift(ks)
-  kx = 2 * pi * LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps)
+  kx = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
   kx = fftshift(kx)
-  ky = 2 * pi * LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps)
+  ky = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
   ky = fftshift(ky)
-  ψ = zeros(ComplexF64, transverse_steps, transverse_steps, axial_steps)
-  ψ_spect = zeros(ComplexF64, transverse_steps, transverse_steps, axial_steps)
+
+  ψ = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
+  ψ_spect = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   # this is wrong
   waveform = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
-  axial_waveforms = coeffs3d.initial_axial.(axial)
 
+  axial_waveforms = coeffs3d.initial_axial.(axial)
+  print("type of axial_waveform: ", typeof(axial_waveforms))
   idx = 1
   for x in x_axis
     idy = 1
@@ -107,7 +111,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   end
 
   ## [axial INDEX, TIME INDEX]
-  ψ = waveform
+  ψ = CuArray(waveform)
 
   fwd_disp_s = exp.(num3D.dt / 2 .* coeffs3d.α * ks .^ 2)
   fwd_disp_x = exp.(num3D.dt / 2 .* coeffs3d.α * kx .^ 2)
@@ -121,7 +125,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     disp[:, :, idk] .= exp(num3D.dt / 2 * coeffs3d.α * k ^ 2) * transverse_disp
     idk+=1
   end
-
+  disp = CuArray(disp)
 
   fwd_beta = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   idx = 1
@@ -134,19 +138,26 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     idx+=1
   end
 
+  fwd_beta = CuArray(fwd_beta)
+
+  print("type of psi: ", typeof(ψ))
   ψ_abs2_result = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
   ψ_abs2_result[:, 1] = sum(abs2.(waveform), dims=(1, 2))
   max_amplitude = maximum(abs.(ψ).^2)
+  nlin = CUDA.zeros((transverse_steps, transverse_steps, axial_steps))
+  print("\n\n\n type of gamma: ", typeof(ψ.^2))
+
   for n = 1:time_steps-1
     ψ_spect = fft(ψ)
     ψ_spect .= ψ_spect .* disp
     ψ = ifft(ψ_spect)
-    ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ.(ψ)) .* fwd_beta  ## this is an Euler step
+    nlin = coeffs3d.γ(ψ)
+    ψ .= ψ .* exp.(num3D.dt / 2 .* nlin)  .* fwd_beta  ## this is an Euler step
     if max_amplitude < maximum(abs.(ψ).^2)
       max_amplitude = maximum(abs.(ψ).^2)
     end
     #display(ψ[3, 3, :])
-    ψ_abs2_result[:, n+1] =  sum(abs2.(ψ), dims=(1, 2))
+    ψ_abs2_result[:, n+1] = sum(abs2.(ψ), dims=(1, 2))
   end
   ψ_spect = fft(ψ)
 
@@ -154,7 +165,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
 end
 
 
-function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
+function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   time_steps = Int(floor(num3D.T / num3D.dt))
   axial_steps = Int(floor(num3D.S / num3D.ds))
   transverse_steps = Int(floor(num3D.Transverse / num3D.dtr))

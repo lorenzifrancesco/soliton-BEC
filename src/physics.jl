@@ -134,6 +134,12 @@ function γ(sim::Simulation, app::Apparatus, state::InitialState, ψ::ComplexF64
     return value
 end
 
+function γ_3d(sim::Simulation, app::Apparatus, state::InitialState, ψ::CuArray{ComplexF64, 3, CUDA.Mem.DeviceBuffer})
+    hbar = 6.62607015e-34 / (2 * pi)
+    l_perp = sqrt(hbar / (app.m * app.ω_perp))
+    return CuArray(-im * 2 * hbar * app.as * (app.N - 1) / (app.m * l_perp^2) * abs.(ψ).^2)
+end
+
 function wave(sim::Simulation, app::Apparatus, state::InitialState, s::Float64)
     hbar = 6.62607015e-34 / (2 * pi)
     l_perp = sqrt(hbar / (app.m * app.ω_perp))
@@ -178,7 +184,7 @@ function get_coefficients_3d(sim::Simulation, app::Apparatus, pot::Potential, st
 
     α = -im * hbar / (2 * app.m)
     beta(s::Float64) = β_3d(sim::Simulation, app::Apparatus, pot::Potential, s)
-    gamma(ψ::ComplexF64) = γ(sim::Simulation, app::Apparatus, state::InitialState, ψ)
+    gamma(ψ::CuArray{ComplexF64, 3, CUDA.Mem.DeviceBuffer}) = γ_3d(sim::Simulation, app::Apparatus, state::InitialState, ψ)
     initial_state_axial(s::Float64) = wave(sim::Simulation, app::Apparatus, state::InitialState, s)
     initial_state_radial(r::Float64) = exp(-r^2) / (2*pi)^(1/2)
     confinment(r::Float64) = 1/2 * app.ω_perp^2 * r^2

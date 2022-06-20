@@ -10,6 +10,8 @@ using QuadGK
 using Elliptic
 using UnPack
 using Plots
+using CUDA
+
 include("physics.jl")
 include("solver.jl")
 include("utils.jl")

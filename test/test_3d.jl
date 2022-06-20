@@ -71,7 +71,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     L, #S
     L * 1e-3, #ds
     l_perp, 
-    l_perp * 1e-1, 
+    l_perp * 5e-2, 
   )
   return num
 end
@@ -114,12 +114,10 @@ for (num, sim, pot, app, state) in configs
   time, axial, ψ_abs2_result = @time ssfm_solve_3d(num, coeffs)
   gr()
   print(size(ψ_abs2_result))
-  display(ψ_abs2_result)
   fig = heatmap(abs.(ψ_abs2_result))
+  display(fig)
   print("Maximum time: ", time[end])
   print("\nMaximum space: ", axial[end])
-
-  display(fig)
   cnt += 1
 
 end
