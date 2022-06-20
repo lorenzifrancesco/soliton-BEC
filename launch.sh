@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=BECdyn1.0
-#SBATCH --error=BECdyn1.%j.err
-#SBATCH --output=BECdyn1.%j.out
+#SBATCH --error=BEC3D.err
+#SBATCH --output=BEC3D.out
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=8
 #SBATCH --mem=100G
 #SBATCH --mail-user francesco.lorenzi98@gmail.com
 #SBATCH --mail-type ALL
