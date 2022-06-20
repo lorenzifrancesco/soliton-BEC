@@ -7,7 +7,7 @@ From: julia:1.7.2
     apt install git -y
     git clone https://github.com/lorenzifrancesco/soliton-BEC
     cd soliton-BEC
-    git checkout transmission-exploration
+    git checkout 3D-GPE
     
 %runscript
     julia --threads=auto install.jl
