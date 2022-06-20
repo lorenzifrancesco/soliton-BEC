@@ -188,7 +188,6 @@ function get_coefficients_3d(sim::Simulation, app::Apparatus, pot::Potential, st
     initial_state_axial(s::Float64) = wave(sim::Simulation, app::Apparatus, state::InitialState, s)
     initial_state_radial(r::Float64) = exp(-r^2) / (2*pi)^(1/2)
     confinment(r::Float64) = 1/2 * app.ω_perp^2 * r^2
-    print("x0: ", state.x0) 
     return Coefficients_3D(α, beta, gamma, confinment, initial_state_axial, initial_state_radial)
 end
 

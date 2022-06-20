@@ -128,7 +128,6 @@ print("\n-->Number of threads: ", nth)
     (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
     # potential space index
     coeffs = get_coefficients_3d(sim, app, pot, state)
-    print("\nlaunch pseudospectral solver")
     time, space, ψ, ψ_spect = ssfm_propagate_3d(numerics, coeffs)
     axis_center = Int(floor((numerics.Transverse / 2/numerics.dtr)))
     #display(ψ - ψ_old)
