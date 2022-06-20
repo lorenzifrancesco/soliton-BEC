@@ -1,4 +1,7 @@
 ### TEST FOR THE TRANSMISSION COEFFICIENT FOR DIFFERENT SOLITON VELOCITIES AND BARRIER STRENGTHS
+using Pkg
+Pkg.instantiate()
+using SolitonBEC
 using SolitonBEC
 using Printf
 using Elliptic
