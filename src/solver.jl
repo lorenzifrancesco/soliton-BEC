@@ -106,19 +106,6 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     idx+=1
   end
 
-  # Natural orientation choice for plot 
-  # fig2 = heatmap(x_axis * 1e3,
-  # y_axis * 1e3,
-  # abs.(waveform[:, :, 1]),
-  # show=true,
-  # title="|ψ|^2",
-  # ylabel="space [mm]",
-  # xlabel="time [ms]",
-  # colorrange=(0, 1),
-  # reuse=false,
-  # size=(800, 600))
-  # display(fig2)
-
   ## [axial INDEX, TIME INDEX]
   ψ = waveform
 
@@ -167,8 +154,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
 end
 
 
-# impossible to keep in memory the full time evolution
-function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
+function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   time_steps = Int(floor(num3D.T / num3D.dt))
   axial_steps = Int(floor(num3D.S / num3D.ds))
   transverse_steps = Int(floor(num3D.Transverse / num3D.dtr))
@@ -201,19 +187,6 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     idx+=1
   end
 
-  # Natural orientation choice for plot 
-  # fig2 = heatmap(x_axis * 1e3,
-  # y_axis * 1e3,
-  # abs.(waveform[:, :, 1]),
-  # show=true,
-  # title="|ψ|^2",
-  # ylabel="space [mm]",
-  # xlabel="time [ms]",
-  # colorrange=(0, 1),
-  # reuse=false,
-  # size=(800, 600))
-  # display(fig2)
-
   ## [axial INDEX, TIME INDEX]
   ψ = waveform
 
@@ -230,16 +203,16 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     idk+=1
   end
 
-  fwd_s = exp.(num3D.dt / 2 .* coeffs3d.β.(axial))
-  fwd_x = exp.(num3D.dt / 2 .* coeffs3d.β.(x_axis))
-  fwd_y = exp.(num3D.dt / 2 .* coeffs3d.β.(y_axis))
-  transverse_beta = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
-  transverse_beta .= fwd_x .* fwd_y'
+
   fwd_beta = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
-  ids = 1
-  for s in axial
-    fwd_beta[:, :, ids] = exp(num3D.dt / 2 * coeffs3d.α * s ^ 2) * transverse_beta
-    idk+=1
+  idx = 1
+  for x in x_axis
+    idy = 1
+    for y in y_axis
+      fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
+      idy +=1
+    end
+    idx+=1
   end
 
   max_amplitude = maximum(abs.(ψ).^2)
@@ -247,7 +220,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     ψ_spect = fft(ψ)
     ψ_spect .= ψ_spect .* disp
     ψ = ifft(ψ_spect)
-    ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ.(ψ))  ## this is an Euler step
+    ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ.(ψ)) .* fwd_beta  ## this is an Euler step
     if max_amplitude < maximum(abs.(ψ).^2)
       max_amplitude = maximum(abs.(ψ).^2)
     end
@@ -255,12 +228,9 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   end
   ψ_spect = fft(ψ)
 
-  gr()
-  fig_axis = plot(axial, abs2.(ψ[5, 5, :]), title="axial distribution", reuse=false)
-  display(fig_axis)
-
   return time, axial, ψ, ψ_spect, max_amplitude
 end
+
 
 function ground_state_solve(num::Numerics, coeffs::Coefficients)
   time_steps = Int(floor(num.T / num.dt))

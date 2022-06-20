@@ -36,14 +36,13 @@ khaykovich_gpe = Simulation(
 # --------- Apparata ---------
 std_apparatus = Apparatus(
   mass, #m (conversion AMU -> kg)
-  as, # as
+  as *2*pi, # as
   omega_perp, # ω_perp
   N, #N
   γ, #γ
   2 * pi * 4,# ω_z
 )
 
-# Energy = 1 / 2 * (std_apparatus.as^2 / (width^2) + std_apparatus.as^2 / (2 * l_perp^2) + width^2 / std_apparatus.as^2 - interaction_g * std_apparatus.as^3 / (l_perp * width^2)) * hbar * omega_perp
 L = 2 * space_unit
 
 v0 = 1*velocity_unit
@@ -68,7 +67,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics_3D(
     T, #T
-    T * 1e-2, #dt
+    T * 1e-3, #dt
     L, #S
     L * 1e-3, #ds
     l_perp, 
@@ -82,7 +81,7 @@ end
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 1e-3, #width
+    1e-6, #width
     0, #position
     energy, #energy
     0, #ϵ
@@ -94,17 +93,9 @@ end
 energy_unit = mass * N^2 * ggg^2 / hbar^2
 print("\n\tenergy unit: ", energy_unit, " J")
 
-GSEnergy = energy_unit * (-N/24)
-#print("\nground state energy: ", GSEnergy/hbar, " hbar\n")
-phys_vel = 4.918e-3
-normd_vel = phys_vel*hbar/ggg/N
-Energy = GSEnergy + energy_unit * normd_vel^2*N/2
-#print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
-
-
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 20
+num_barr = 5
 barrier_list = LinRange(0, 15036/16, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 

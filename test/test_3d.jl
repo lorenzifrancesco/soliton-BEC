@@ -43,7 +43,6 @@ std_apparatus = Apparatus(
   2 * pi * 4,# ω_z
 )
 
-# Energy = 1 / 2 * (std_apparatus.as^2 / (width^2) + std_apparatus.as^2 / (2 * l_perp^2) + width^2 / std_apparatus.as^2 - interaction_g * std_apparatus.as^3 / (l_perp * width^2)) * hbar * omega_perp
 L = 2 * space_unit
 
 v0 = 1*velocity_unit
@@ -93,13 +92,6 @@ end
 
 energy_unit = mass * N^2 * ggg^2 / hbar^2
 print("\n\tenergy unit: ", energy_unit, " J")
-
-GSEnergy = energy_unit * (-N/24)
-#print("\nground state energy: ", GSEnergy/hbar, " hbar\n")
-phys_vel = 4.918e-3
-normd_vel = phys_vel*hbar/ggg/N
-Energy = GSEnergy + energy_unit * normd_vel^2*N/2
-#print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
 
 ## Configurations
 vel = 0.007
