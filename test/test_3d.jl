@@ -28,15 +28,15 @@ print("\n\tvelocity unit: ", velocity_unit, " m/s")
 
 # --------- Simulation ---------
 khaykovich_gpe = Simulation(
-  "NPSE",
+  "GPE",
   "barrier",
 )
 
-γ = 0 * 1.77e-11
+γ = 0 * 1.77e-11 # three body losses, phenomenological
 # --------- Apparata ---------
 std_apparatus = Apparatus(
   mass, #m (conversion AMU -> kg)
-  as, # as
+  as * 2*pi, # as
   omega_perp, # ω_perp
   N, #N
   γ, #γ
@@ -68,7 +68,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics_3D(
     T, #T
-    T * 1e-2, #dt
+    T * 1e-3, #dt
     L, #S
     L * 1e-3, #ds
     l_perp, 
@@ -82,7 +82,7 @@ end
 function barrier_height(energy::Float64)
   r = Potential(
     "barrier", # type 
-    L * 1e-3, #width
+    1e-6, #width
     0, #position
     energy, #energy
     0, #ϵ
@@ -101,58 +101,33 @@ normd_vel = phys_vel*hbar/ggg/N
 Energy = GSEnergy + energy_unit * normd_vel^2*N/2
 #print("\ntraveling state energy: ", Energy/hbar, " hbar\n")
 
-
-## ==================== Transmission grid configuration
-configs = []
-num_barr = 20
-barrier_list = LinRange(0, 15036/16, num_barr)
-velocity_list = LinRange(0, 1, num_barr)
-
-for vel in velocity_list
-  for barrier_energy in barrier_list
-    potential = barrier_height(barrier_energy * hbar)
-    state = initial_state_vel(vel * velocity_unit)
-    numerics = adaptive_numerics(vel * velocity_unit, L, x0, velocity_unit)
-    push!(configs, (numerics, khaykovich_gpe, std_apparatus, potential, state))
-  end
-end
-
+## Configurations
+vel = 0.007
+energy = 3000 *hbar
+configs = [
+  (adaptive_numerics(vel/2, L, x0, velocity_unit), khaykovich_gpe, barrier_height(energy), std_apparatus, initial_state_vel(vel)),
+  #(num, khaykovich_gpe, barrier, std_apparatus, InitialState1), 
+]
 mem_limit = 15000000000 #byte
-plt_width = 800
-plt_height = 600
+cnt = 1
 
-## Soliton - barrier collision --------------------------------------------
-#run_dynamics(configs[20*20 - 5]...)
+angle = LinRange(0, 2 * pi, 100)
 
+for (num, sim, pot, app, state) in configs
 
-T = zeros(Float64, length(velocity_list), length(barrier_list))
+  global cnt
 
-nth = Threads.nthreads() #print number of threads
-print("\n-->Number of threads: ", nth)
-#Threads.@threads
- for iv in axes(velocity_list, 1)
-  
-    for (ib, barrier_energy) in enumerate(barrier_list)
+  coeffs = get_coefficients_3d(sim, app, pot, state)
+  print("\nLaunch pseudospectral solver")
+  time, axial, ψ_abs2_result = @time ssfm_solve_3d(num, coeffs)
+  gr()
+  print(size(ψ_abs2_result))
+  display(ψ_abs2_result)
+  fig = heatmap(abs.(ψ_abs2_result))
+  print("Maximum time: ", time[end])
+  print("\nMaximum space: ", axial[end])
 
-    (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
-    # potential space index
-    coeffs = get_coefficients_3d(sim, app, pot, state)
-    print("\nlaunch pseudospectral solver")
-    time, space, ψ, ψ_spect = ssfm_propagate_3d(numerics, coeffs)
-    axis_center = Int(floor((numerics.Transverse / 2/numerics.dtr)))
-    #display(ψ - ψ_old)
-    #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
-    # fig1 = plot(title="|ψ|^2 after collision with barrier",
-    # xlabel="space [mm]",
-    # ylabel="|ψ|^2",
-    # reuse=false,
-    # size=(800, 400),
-    # legend=:topleft)
-    # heatmap!(abs2.(ψ[:, :, :]))
-    # display(fig1)    
-    
-    T[iv, ib] = sum(abs.(ψ[:, :, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds)
-    print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
-  
-  end
+  display(fig)
+  cnt += 1
+
 end
