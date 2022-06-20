@@ -73,8 +73,8 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     T * 2e-4, #dt
     L, #S
     L * 1e-3, #ds
-    l_perp, 
-    l_perp * 1e-1, 
+    l_perp * 8, 
+    l_perp / 2, 
   )
   return num
 end
@@ -98,8 +98,8 @@ print("\n\tenergy unit: ", energy_unit, " J")
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 15
-barrier_list = LinRange(0, 15036/4, num_barr)
+num_barr = 50
+barrier_list = LinRange(0, 15036/2, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
 for vel in velocity_list

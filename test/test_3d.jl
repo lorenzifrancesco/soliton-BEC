@@ -71,7 +71,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     L, #S
     L * 1e-3, #ds
     l_perp, 
-    l_perp * 5e-2, 
+    l_perp *1e-1, 
   )
   return num
 end
