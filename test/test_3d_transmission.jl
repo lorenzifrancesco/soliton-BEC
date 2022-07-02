@@ -70,11 +70,11 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics_3D(
     T, #T
-    T * 2e-4, #dt
+    T * 1e-3, #dt
     L, #S
     L * 1e-3, #ds
-    l_perp * 10, 
-    l_perp / 7, 
+    l_perp * 20, 
+    l_perp /2, 
   )
   return num
 end
@@ -150,4 +150,4 @@ print("\n-->Number of threads: ", nth)
   end
 end
 
-write("T_3D_GPU.bin", T)
+write("T_3D_GPU_20_sigma.bin", T)
