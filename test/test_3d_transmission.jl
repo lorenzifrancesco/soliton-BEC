@@ -150,4 +150,4 @@ print("\n-->Number of threads: ", nth)
   end
 end
 
-write("T_3D_GPU_20_sigma.bin", T)
+write("T_null_boundary.bin", T)
