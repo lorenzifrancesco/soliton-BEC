@@ -185,7 +185,10 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
+      if x==0 || y==0
+        waveform[idx, idy, :] .= 0 * axial_waveforms
+      else waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
+      end
       idy +=1
     end
     idx+=1
@@ -213,7 +216,11 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
+      if x==0 || y==0
+        fwd_beta[idx, idy, :] .= 0 * axial_waveforms
+      else
+        fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
+      end
       idy +=1
     end
     idx+=1
@@ -227,6 +234,8 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     ψ_spect .= ψ_spect .* disp
     ψ = ifft(ψ_spect)
     ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ(ψ))  .* fwd_beta  ## this is an Euler step
+    # Renormalize
+    ψ .= ψ / sqrt(sum(abs2.(ψ)))
     # if max_amplitude < maximum(abs.(ψ).^2)
     #   max_amplitude = maximum(abs.(ψ).^2)
     # end
