@@ -102,7 +102,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
+      if idx<=2 || idx>=transverse_steps-2 || idy<=2 || idy>=transverse_steps-2
         waveform[idx, idy, :] .= 0 * axial_waveforms
       else waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
       end
@@ -133,7 +133,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
+      if idx<=2 || idx>=transverse_steps-2 || idy<=2 || idy>=transverse_steps-2
         fwd_beta[idx, idy, :] .= 1 * exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
       else
         fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
@@ -199,7 +199,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
+      if idx<=2 || idx>=transverse_steps-2 || idy<=2 || idy>=transverse_steps-2
         waveform[idx, idy, :] .= 0 * axial_waveforms
       else waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
       end
@@ -230,7 +230,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
+      if idx<=2 || idx>=transverse_steps-2 || idy<=2 || idy>=transverse_steps-2
         fwd_beta[idx, idy, :] .= 0 * exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
       else
         fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
