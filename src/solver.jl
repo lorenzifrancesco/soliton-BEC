@@ -102,7 +102,10 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
+      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
+        waveform[idx, idy, :] .= 0 * axial_waveforms
+      else waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
+      end
       idy +=1
     end
     idx+=1
@@ -130,7 +133,11 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
+      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
+        fwd_beta[idx, idy, :] .= 1 * exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
+      else
+        fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
+      end
       idy +=1
     end
     idx+=1
@@ -141,6 +148,11 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   ψ_abs2_result = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
   ψ_abs2_result[:, 1] = sum(abs2.(waveform), dims=(1, 2))
   max_amplitude = maximum(abs.(ψ).^2)
+  Δ_radial=x_axis[2]-x_axis[1]
+  Δ_axial=axial[2]-axial[1]
+  #ψ .= ψ / (sqrt(sum(abs2.(ψ)* Δ_radial^2 * Δ_axial) ))
+  print("integral of modulus squared: " , sqrt(sum(abs2.(ψ) * Δ_axial * Δ_radial^2)))
+  integral =   sqrt(sum(abs2.(ψ)))
   for n = 1:time_steps-1
     ψ_spect = fft(ψ)
     ψ_spect .= ψ_spect .* disp
@@ -150,6 +162,8 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     #   max_amplitude = maximum(abs.(ψ).^2)
     # end
     #display(ψ[3, 3, :])
+    # Renormalize
+    ψ .= ψ / sqrt(sum(abs2.(ψ)))* integral 
     ψ_abs2_result[:, n+1] = sum(abs2.(ψ), dims=(1, 2))
   end
   ψ_spect = fft(ψ)
@@ -185,7 +199,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if x<=1 || x>=transverse_steps-1 || y<=1 || y>=transverse_steps-1
+      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
         waveform[idx, idy, :] .= 0 * axial_waveforms
       else waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
       end
@@ -216,8 +230,8 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if x<=1 || x>=transverse_steps-1 || y<=1 || y>=transverse_steps-1
-        fwd_beta[idx, idy, :] .= 0 * axial_waveforms
+      if idx<=1 || idx>=transverse_steps-1 || idy<=1 || idy>=transverse_steps-1
+        fwd_beta[idx, idy, :] .= 0 * exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
       else
         fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
       end
@@ -227,7 +241,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   end
 
   fwd_beta = CuArray(fwd_beta)
-
+  integral = sqrt(sum(abs2.(ψ)))
   max_amplitude = maximum(abs.(ψ).^2)
   for n = 1:time_steps-1
     ψ_spect = fft(ψ)
@@ -235,7 +249,7 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     ψ = ifft(ψ_spect)
     ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ(ψ))  .* fwd_beta  ## this is an Euler step
     # Renormalize
-    ψ .= ψ / sqrt(sum(abs2.(ψ)))
+    ψ .= ψ / sqrt(sum(abs2.(ψ)))* integral 
     # if max_amplitude < maximum(abs.(ψ).^2)
     #   max_amplitude = maximum(abs.(ψ).^2)
     # end

@@ -144,7 +144,7 @@ print("\n-->Number of threads: ", nth)
     # heatmap!(abs2.(ψ[:, :, :]))
     # display(fig1)    
     
-    T[iv, ib] = sum(abs.(ψ[:, :, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds)
+    T[iv, ib] = sum(abs.(ψ[:, :, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds * numerics.dtr^2)
     print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
   
   end
