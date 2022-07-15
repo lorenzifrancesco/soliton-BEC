@@ -11,11 +11,11 @@ mass = 6.941 * 1.660539e-27
 omega_perp = 2 * pi * 710
 l_perp = sqrt(hbar / (mass * omega_perp))
 N = 4e3
-as = -0.21e-9
+as = -0.21e-9 * 30
 
 interaction_g = abs(2*hbar^2 * as / mass / l_perp^2)
 ggg = 2*hbar*omega_perp*abs(as)
-
+ggg = 1.97589411873e-40
 print("\ninteraction_g: ", interaction_g)
 
 # mass as total mass or mass per atom??
@@ -69,7 +69,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     T, #T
     T * 1e-3, #dt
     L, #S
-    L * 1e-3, #ds
+    L * 1e-4, #ds
     l_perp, 
     l_perp *1e-1, 
   )
