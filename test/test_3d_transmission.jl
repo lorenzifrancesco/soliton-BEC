@@ -70,7 +70,7 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics_3D(
     T, #T
-    T * 1e-4, #dt
+    T * 1e-3, #dt
     L, #S
     L * 1e-3, #ds
     l_perp * 20, 
@@ -98,7 +98,7 @@ print("\n\tenergy unit: ", energy_unit, " J")
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 10
+num_barr = 200
 barrier_list = LinRange(0, 15036/2, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -124,29 +124,32 @@ T = zeros(Float64, length(velocity_list), length(barrier_list))
 nth = Threads.nthreads() #print number of threads
 print("\n-->Number of threads: ", nth)
 #Threads.@threads
- for iv in axes(velocity_list, 1)
-  
+ for (iv, velocity_energy) in enumerate(velocity_list)
     for (ib, barrier_energy) in enumerate(barrier_list)
-
-    (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
-    # potential space index
-    coeffs = get_coefficients_3d(sim, app, pot, state)
-    time, space, ψ, ψ_spect = ssfm_propagate_3d(numerics, coeffs)
-    axis_center = Int(floor((numerics.Transverse / 2/numerics.dtr)))
-    #display(ψ - ψ_old)
-    #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
-    # fig1 = plot(title="|ψ|^2 after collision with barrier",
-    # xlabel="space [mm]",
-    # ylabel="|ψ|^2",
-    # reuse=false,
-    # size=(800, 400),
-    # legend=:topleft)
-    # heatmap!(abs2.(ψ[:, :, :]))
-    # display(fig1)    
-    
-    T[iv, ib] = sum(abs.(ψ[:, :, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds * numerics.dtr^2)
-    print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
-  
+      #if barrier_energy > velocity_energy /velocity_unit * 15036/2 * hbar
+      if ib > iv 
+        T[iv, ib] = 0.0
+        print("\n skipping: T[", iv, ", ", ib ,"]")
+      else
+        (numerics, sim, app, pot, state) = configs[(iv-1) * num_barr + ib]
+        # potential space index
+        coeffs = get_coefficients_3d(sim, app, pot, state)
+        time, space, ψ, ψ_spect = ssfm_propagate_3d(numerics, coeffs)
+        axis_center = Int(floor((numerics.Transverse / 2/numerics.dtr)))
+        #display(ψ - ψ_old)
+        #potential_idx = Int64(floor((pot.position+numerics.S/2) / numerics.ds))
+        # fig1 = plot(title="|ψ|^2 after collision with barrier",
+        # xlabel="space [mm]",
+        # ylabel="|ψ|^2",
+        # reuse=false,
+        # size=(800, 400),
+        # legend=:topleft)
+        # heatmap!(abs2.(ψ[:, :, :]))
+        # display(fig1)    
+        
+        T[iv, ib] = sum(abs.(ψ[:, :, Int(floor(length(space)/2)):end]) .^ 2 * numerics.ds * numerics.dtr^2)
+        print("\nT[", iv, ", ", ib ,"] = ", T[iv, ib])
+      end
   end
 end
 
