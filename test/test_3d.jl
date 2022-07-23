@@ -11,7 +11,7 @@ mass = 6.941 * 1.660539e-27
 omega_perp = 2 * pi * 710
 l_perp = sqrt(hbar / (mass * omega_perp))
 N = 4e3
-as = -0.21e-9 
+as = -0.21e-9 *4
 
 interaction_g = abs(2*hbar^2 * as / mass / l_perp^2)
 ggg = 2*hbar*omega_perp*abs(as)
@@ -67,11 +67,11 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
   end
   num = Numerics_3D(
     T , #T
-    T * 2e-3, #dt
+    T * 5e-3, #dt
     L, #S
-    L * 5e-3, #ds
+    L * 1e-3, #ds
     l_perp * 10, 
-    l_perp /20, 
+    l_perp /5, 
   )
   return num
 end
@@ -94,7 +94,7 @@ energy_unit = mass * N^2 * ggg^2 / hbar^2
 print("\n\tenergy unit: ", energy_unit, " J")
 
 ## Configurations
-vel = 0.007 * 0
+vel = 0.007
 energy = 3000 *hbar
 configs = [
   (adaptive_numerics(vel/2, L, x0, velocity_unit), khaykovich_gpe, barrier_height(energy), std_apparatus, initial_state_vel(vel)),
@@ -123,7 +123,7 @@ for (num, sim, pot, app, state) in configs
   print("\nMaximum space: ", axial[end])
 
   fig_cross = heatmap(1e12*abs.(cross_section), title="Transverse variance over axis and time", reuse=false)
-  #display(fig_cross)
+  display(fig)
   cnt += 1
 
 end

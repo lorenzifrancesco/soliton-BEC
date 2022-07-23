@@ -88,9 +88,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   ks = 2 * pi * Array(LinRange(-1 / (2 * num3D.ds), 1 / (2 * num3D.ds), axial_steps))
   ks = fftshift(ks)
   kx = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
-  #kx = fftshift(kx)
   ky = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
-  #ky = fftshift(ky)
 
   ψ = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   ψ_spect = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
@@ -140,10 +138,10 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   end
 
   fwd_beta = CuArray(fwd_beta)
-###############
-fig = heatmap((Array(angle.(fwd_beta[:, :, 1]))))
-#display(fig)
-###############
+  ###############
+  fig = heatmap((Array(angle.(fwd_beta[:, :, 1]))))
+  #display(fig)
+  ###############
   ψ_abs2_result = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
   cross_section = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
   square_distance_mask = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
@@ -178,7 +176,7 @@ fig = heatmap((Array(angle.(fwd_beta[:, :, 1]))))
 
   #print("\n\nSEEK THE DIFFERENCES fwd_beta :" , fwd_beta[:, :, 1].-fwd_beta[:, :, 1]')
 
-  for n = 1:1 #time_steps-1
+  for n = 1:time_steps-1
     ψ_spect = fft(ψ)
     ψ_spect .= ψ_spect .* disp
     
@@ -192,16 +190,17 @@ fig = heatmap((Array(angle.(fwd_beta[:, :, 1]))))
     cross_section[:, n+1] .= sum(abs2.(ψ) .* square_distance_mask , dims=(1, 2))[1, 1, :] ./ ψ_abs2_result[:, n+1]
   end
 
-    ###############
-    fig = heatmap(abs.(1e12*Array(abs2.(ψ[:, :, Int(floor(axial_steps/4))]))))
-    display(fig)
-    ###############
+  ###############
+  fig = heatmap(abs.(1e12*Array(abs2.(ψ[:, :, Int(floor(axial_steps/4))]))))
+  display(fig)
+  ###############
 
 
   ψ_spect = fft(ψ)
   print("\n\nComputation completed!\n\n")
   return time, axial, ψ_abs2_result, cross_section
 end
+
 
 function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   time_steps = Int(floor(num3D.T / num3D.dt))  
@@ -217,12 +216,12 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   ks = 2 * pi * Array(LinRange(-1 / (2 * num3D.ds), 1 / (2 * num3D.ds), axial_steps))
   ks = fftshift(ks)
   kx = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
-  kx = fftshift(kx)
   ky = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
-  ky = fftshift(ky)
 
   ψ = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   ψ_spect = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
+  avg_cross_section = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
+
   # this is wrong
   waveform = Array{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
 
@@ -244,11 +243,11 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   ψ = CuArray(waveform)
 
   fwd_disp_s = exp.(num3D.dt / 2 .* coeffs3d.α * ks .^ 2)
-  fwd_disp_x = exp.(num3D.dt / 2 .* coeffs3d.α * kx .^ 2)
+  fwd_disp_x = exp.(num3D.dt / 2 .* coeffs3d.α * -kx .^ 2)
   fwd_disp_y = exp.(num3D.dt / 2 .* coeffs3d.α * ky .^ 2)
   transverse_disp = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
 
-  transverse_disp .= fwd_disp_x .* fwd_disp_y'
+  transverse_disp .= fftshift(fwd_disp_x .* (fwd_disp_y)')
   disp = Array{ComplexF64 , 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   idk = 1
   for k in ks
