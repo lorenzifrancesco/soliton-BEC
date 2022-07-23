@@ -163,7 +163,6 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     idy = 1
     for y in y_axis
       square_distance_mask[idx, idy] = (x^2 + y^2)
-    end
       idy +=1
     end
     idx+=1
