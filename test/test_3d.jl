@@ -11,7 +11,7 @@ mass = 6.941 * 1.660539e-27
 omega_perp = 2 * pi * 710
 l_perp = sqrt(hbar / (mass * omega_perp))
 N = 4e3
-as = -0.21e-9 * 30
+as = -0.21e-9 
 
 interaction_g = abs(2*hbar^2 * as / mass / l_perp^2)
 ggg = 2*hbar*omega_perp*abs(as)
@@ -66,12 +66,12 @@ function adaptive_numerics(velocity::Float64, L, x0, velocity_unit)
     T = abs(x0)/ velocity * 2
   end
   num = Numerics_3D(
-    T, #T
-    T * 1e-3, #dt
+    T , #T
+    T * 2e-3, #dt
     L, #S
-    L * 1e-4, #ds
-    l_perp, 
-    l_perp *1e-1, 
+    L * 5e-3, #ds
+    l_perp * 10, 
+    l_perp /20, 
   )
   return num
 end
@@ -94,7 +94,7 @@ energy_unit = mass * N^2 * ggg^2 / hbar^2
 print("\n\tenergy unit: ", energy_unit, " J")
 
 ## Configurations
-vel = 0.007
+vel = 0.007 * 0
 energy = 3000 *hbar
 configs = [
   (adaptive_numerics(vel/2, L, x0, velocity_unit), khaykovich_gpe, barrier_height(energy), std_apparatus, initial_state_vel(vel)),
@@ -111,16 +111,19 @@ for (num, sim, pot, app, state) in configs
 
   coeffs = get_coefficients_3d(sim, app, pot, state)
   print("\nLaunch pseudospectral solver")
-  time, axial, ψ_abs2_result, cross_section= @time ssfm_solve_3d(num, coeffs)
+  time, axial, ψ_abs2_result_CUDA, cross_section_CUDA = @time ssfm_solve_3d(num, coeffs)
+  ψ_abs2_result = Array(ψ_abs2_result_CUDA)
+  cross_section = Array(cross_section_CUDA)
+  print("\n\t", typeof(cross_section))
+  display(abs.(cross_section))
   gr()
   print(size(ψ_abs2_result))
   fig = heatmap(abs.(ψ_abs2_result), title="Transverse sum of squares over axis and time")
-  display(fig)
   print("Maximum time: ", time[end])
   print("\nMaximum space: ", axial[end])
 
-  fig_cross = heatmap(cross_section, title="Transverse variance over axis and time")
-  display(fig_cross)
+  fig_cross = heatmap(1e12*abs.(cross_section), title="Transverse variance over axis and time", reuse=false)
+  #display(fig_cross)
   cnt += 1
 
 end

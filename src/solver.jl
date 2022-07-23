@@ -88,9 +88,9 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   ks = 2 * pi * Array(LinRange(-1 / (2 * num3D.ds), 1 / (2 * num3D.ds), axial_steps))
   ks = fftshift(ks)
   kx = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
-  kx = fftshift(kx)
+  #kx = fftshift(kx)
   ky = 2 * pi * Array(LinRange(-1 / (2 * num3D.dtr), 1 / (2 * num3D.dtr), transverse_steps))
-  ky = fftshift(ky)
+  #ky = fftshift(ky)
 
   ψ = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   ψ_spect = CuArray{ComplexF64, 3}(undef, (transverse_steps, transverse_steps, axial_steps))
@@ -102,10 +102,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if idx<=2 || idx>=transverse_steps-2 || idy<=2 || idy>=transverse_steps-2
-        waveform[idx, idy, :] .= 0 * axial_waveforms
-      else waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
-      end
+      waveform[idx, idy, :] .= coeffs3d.initial_radial.((x^2 + y^2).^(1/2))' .* axial_waveforms
       idy +=1
     end
     idx+=1
@@ -115,11 +112,14 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   ψ = CuArray(waveform)
 
   fwd_disp_s = exp.(num3D.dt / 2 .* coeffs3d.α * ks .^ 2)
-  fwd_disp_x = exp.(num3D.dt / 2 .* coeffs3d.α * kx .^ 2)
+  fwd_disp_x = exp.(num3D.dt / 2 .* coeffs3d.α * -kx .^ 2)
   fwd_disp_y = exp.(num3D.dt / 2 .* coeffs3d.α * ky .^ 2)
+  print("\n\nsize of x: ", size(fwd_disp_x))
   transverse_disp = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
 
-  transverse_disp .= fwd_disp_x .* fwd_disp_y'
+  transverse_disp .= fftshift(fwd_disp_x .* (fwd_disp_y)')
+  print("\n\nTransverse_disp", typeof(transverse_disp),"\n\n")
+
   disp = Array{ComplexF64 , 3}(undef, (transverse_steps, transverse_steps, axial_steps))
   idk = 1
   for k in ks
@@ -133,18 +133,17 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   for x in x_axis
     idy = 1
     for y in y_axis
-      if idx<=2 || idx>=transverse_steps-2 || idy<=2 || idy>=transverse_steps-2
-        fwd_beta[idx, idy, :] .= 1 * exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
-      else
-        fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
-      end
+      fwd_beta[idx, idy, :] .= exp.(-im / hbar * num3D.dt / 2 * coeffs3d.confinment.((x^2 + y^2).^(1/2))) * exp.(num3D.dt / 2 * coeffs3d.β.(axial))
       idy +=1
     end
     idx+=1
   end
 
   fwd_beta = CuArray(fwd_beta)
-
+###############
+fig = heatmap((Array(angle.(fwd_beta[:, :, 1]))))
+#display(fig)
+###############
   ψ_abs2_result = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
   cross_section = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
   square_distance_mask = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
@@ -157,7 +156,9 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     end
     idx+=1
   end
+
   square_distance_mask = CuArray(square_distance_mask)
+
 
   ψ_abs2_result[:, 1] = sum(abs2.(ψ), dims=(1, 2))
   print("\n\nsize(SUM waveform): ", size(sum(ψ, dims=(1, 2))))
@@ -165,33 +166,40 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   print("\n\nsize( ψ_abs2_result[:, 1]) ", size(ψ_abs2_result[:, 1]))
   ψ_abs2_result = CuArray(ψ_abs2_result)
   cross_section = CuArray(cross_section)
+  
   cross_section[:, 1] .= sum(abs2.(ψ) .* square_distance_mask , dims=(1, 2))[1, 1, :] ./ ψ_abs2_result[:, 1]
-
 
   max_amplitude = maximum(abs.(ψ).^2)
   Δ_radial=x_axis[2]-x_axis[1]
   Δ_axial=axial[2]-axial[1]
   #ψ .= ψ / (sqrt(sum(abs2.(ψ)* Δ_radial^2 * Δ_axial) ))
   print("\n\nintegral of modulus squared: " , sqrt(sum(abs2.(ψ) * Δ_axial * Δ_radial^2)))
-  integral =   sqrt(sum(abs2.(ψ)))
+  integral = sqrt(sum(abs2.(ψ)))
 
-  
-  for n = 1:time_steps-1
+  #print("\n\nSEEK THE DIFFERENCES fwd_beta :" , fwd_beta[:, :, 1].-fwd_beta[:, :, 1]')
+
+  for n = 1:1 #time_steps-1
     ψ_spect = fft(ψ)
     ψ_spect .= ψ_spect .* disp
+    
     ψ = ifft(ψ_spect)
-    ψ .= ψ .* exp.(num3D.dt / 2 .* coeffs3d.γ(ψ))  .* fwd_beta  ## this is an Euler step
-    # if max_amplitude < maximum(abs.(ψ).^2)
-    #   max_amplitude = maximum(abs.(ψ).^2)
-    # end
-    #display(ψ[3, 3, :])
+    ψ .= ψ .* fwd_beta  .* exp.(num3D.dt / 2 .* coeffs3d.γ(ψ))
+
     # Renormalize
+    print("\nrenorm factor: ", sqrt(sum(abs2.(ψ)))/integral)
     ψ .= ψ / sqrt(sum(abs2.(ψ)))* integral 
     ψ_abs2_result[:, n+1] = sum(abs2.(ψ), dims=(1, 2))
     cross_section[:, n+1] .= sum(abs2.(ψ) .* square_distance_mask , dims=(1, 2))[1, 1, :] ./ ψ_abs2_result[:, n+1]
   end
-  ψ_spect = fft(ψ)
 
+    ###############
+    fig = heatmap(abs.(1e12*Array(abs2.(ψ[:, :, Int(floor(axial_steps/4))]))))
+    display(fig)
+    ###############
+
+
+  ψ_spect = fft(ψ)
+  print("\n\nComputation completed!\n\n")
   return time, axial, ψ_abs2_result, cross_section
 end
 
