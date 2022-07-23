@@ -111,13 +111,16 @@ for (num, sim, pot, app, state) in configs
 
   coeffs = get_coefficients_3d(sim, app, pot, state)
   print("\nLaunch pseudospectral solver")
-  time, axial, ψ_abs2_result = @time ssfm_solve_3d(num, coeffs)
+  time, axial, ψ_abs2_result, cross_section= @time ssfm_solve_3d(num, coeffs)
   gr()
   print(size(ψ_abs2_result))
-  fig = heatmap(abs.(ψ_abs2_result))
+  fig = heatmap(abs.(ψ_abs2_result), title="Transverse sum of squares over axis and time")
   display(fig)
   print("Maximum time: ", time[end])
   print("\nMaximum space: ", axial[end])
+
+  fig_cross = heatmap(cross_section, title="Transverse variance over axis and time")
+  display(fig_cross)
   cnt += 1
 
 end

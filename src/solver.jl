@@ -147,16 +147,6 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
 
   ψ_abs2_result = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
   cross_section = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
-
-  ψ_abs2_result[:, 1] = sum(abs2.(waveform), dims=(1, 2))
-  cross_section[:, 1] = sum(abs2.(waveform) .* square_distance_mask, dims=(1, 2))
-  max_amplitude = maximum(abs.(ψ).^2)
-  Δ_radial=x_axis[2]-x_axis[1]
-  Δ_axial=axial[2]-axial[1]
-  #ψ .= ψ / (sqrt(sum(abs2.(ψ)* Δ_radial^2 * Δ_axial) ))
-  print("integral of modulus squared: " , sqrt(sum(abs2.(ψ) * Δ_axial * Δ_radial^2)))
-  integral =   sqrt(sum(abs2.(ψ)))
-  
   square_distance_mask = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
   idx = 1
   for x in x_axis
@@ -167,7 +157,24 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     end
     idx+=1
   end
-  
+  square_distance_mask = CuArray(square_distance_mask)
+
+  ψ_abs2_result[:, 1] = sum(abs2.(ψ), dims=(1, 2))
+  print("\n\nsize(SUM waveform): ", size(sum(ψ, dims=(1, 2))))
+  print("\n\nsize(SUM waveform .* square_distance_mask): ", size(sum(ψ.*square_distance_mask, dims=(1, 2))[1, 1, :]))
+  print("\n\nsize( ψ_abs2_result[:, 1]) ", size(ψ_abs2_result[:, 1]))
+  ψ_abs2_result = CuArray(ψ_abs2_result)
+  cross_section = CuArray(cross_section)
+  cross_section[:, 1] .= sum(abs2.(ψ) .* square_distance_mask , dims=(1, 2))[1, 1, :] ./ ψ_abs2_result[:, 1]
+
+
+  max_amplitude = maximum(abs.(ψ).^2)
+  Δ_radial=x_axis[2]-x_axis[1]
+  Δ_axial=axial[2]-axial[1]
+  #ψ .= ψ / (sqrt(sum(abs2.(ψ)* Δ_radial^2 * Δ_axial) ))
+  print("\n\nintegral of modulus squared: " , sqrt(sum(abs2.(ψ) * Δ_axial * Δ_radial^2)))
+  integral =   sqrt(sum(abs2.(ψ)))
+
   
   for n = 1:time_steps-1
     ψ_spect = fft(ψ)
@@ -181,7 +188,7 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     # Renormalize
     ψ .= ψ / sqrt(sum(abs2.(ψ)))* integral 
     ψ_abs2_result[:, n+1] = sum(abs2.(ψ), dims=(1, 2))
-    cross_section[:, n+1] =  sum(abs2.(ψ) .* square_distance_mask, dims=(1, 2))
+    cross_section[:, n+1] .= sum(abs2.(ψ) .* square_distance_mask , dims=(1, 2))[1, 1, :] ./ ψ_abs2_result[:, n+1]
   end
   ψ_spect = fft(ψ)
 
