@@ -146,13 +146,30 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
   fwd_beta = CuArray(fwd_beta)
 
   ψ_abs2_result = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
+  cross_section = Array{ComplexF64, 2}(undef, (axial_steps, time_steps))
+
   ψ_abs2_result[:, 1] = sum(abs2.(waveform), dims=(1, 2))
+  cross_section[:, 1] = sum(abs2.(waveform) .* square_distance_mask, dims=(1, 2))
   max_amplitude = maximum(abs.(ψ).^2)
   Δ_radial=x_axis[2]-x_axis[1]
   Δ_axial=axial[2]-axial[1]
   #ψ .= ψ / (sqrt(sum(abs2.(ψ)* Δ_radial^2 * Δ_axial) ))
   print("integral of modulus squared: " , sqrt(sum(abs2.(ψ) * Δ_axial * Δ_radial^2)))
   integral =   sqrt(sum(abs2.(ψ)))
+  
+  square_distance_mask = Array{ComplexF64, 2}(undef, (transverse_steps, transverse_steps))
+  idx = 1
+  for x in x_axis
+    idy = 1
+    for y in y_axis
+      square_distance_mask[idx, idy] = (x^2 + y^2)
+    end
+      idy +=1
+    end
+    idx+=1
+  end
+  
+  
   for n = 1:time_steps-1
     ψ_spect = fft(ψ)
     ψ_spect .= ψ_spect .* disp
@@ -165,10 +182,11 @@ function ssfm_solve_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     # Renormalize
     ψ .= ψ / sqrt(sum(abs2.(ψ)))* integral 
     ψ_abs2_result[:, n+1] = sum(abs2.(ψ), dims=(1, 2))
+    cross_section[:, n+1] =  sum(abs2.(ψ) .* square_distance_mask, dims=(1, 2))
   end
   ψ_spect = fft(ψ)
 
-  return time, axial, ψ_abs2_result
+  return time, axial, ψ_abs2_result, cross_section
 end
 
 function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
@@ -254,6 +272,8 @@ function ssfm_propagate_3d(num3D::Numerics_3D, coeffs3d::Coefficients_3D)
     #   max_amplitude = maximum(abs.(ψ).^2)
     # end
     #display(ψ[3, 3, :])
+    
+    # Average cross section computed as mean variance
   end
   ψ_spect = fft(ψ)
 
