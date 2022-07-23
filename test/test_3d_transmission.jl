@@ -127,7 +127,7 @@ print("\n-->Number of threads: ", nth)
  for (iv, velocity_energy) in enumerate(velocity_list)
     for (ib, barrier_energy) in enumerate(barrier_list)
       #if barrier_energy > velocity_energy /velocity_unit * 15036/2 * hbar
-      if ib > iv 
+      if false
         T[iv, ib] = 0.0
         print("\n skipping: T[", iv, ", ", ib ,"]")
       else
