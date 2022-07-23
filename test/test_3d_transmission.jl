@@ -99,7 +99,7 @@ print("\n\tenergy unit: ", energy_unit, " J")
 ## ==================== Transmission grid configuration
 configs = []
 num_barr = 5
-barrier_list = LinRange(0, 15036/16, num_barr)
+barrier_list = LinRange(0, 15036/4, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
 for vel in velocity_list
