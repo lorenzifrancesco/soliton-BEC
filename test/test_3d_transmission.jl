@@ -98,7 +98,7 @@ print("\n\tenergy unit: ", energy_unit, " J")
 
 ## ==================== Transmission grid configuration
 configs = []
-num_barr = 5
+num_barr = 10
 barrier_list = LinRange(0, 15036/4, num_barr)
 velocity_list = LinRange(0, 1, num_barr)
 
@@ -153,4 +153,4 @@ print("\n-->Number of threads: ", nth)
   end
 end
 
-write("T_fix_tune.bin", T)
+write("T_fix_tune_10.bin", T)
